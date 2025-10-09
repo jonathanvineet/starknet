@@ -1,4 +1,5 @@
 import UIKit
+import metamask_ios_sdk
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -26,5 +27,13 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
     }
 
     func sceneDidEnterBackground(_ scene: UIScene) {
+    }
+
+    // Handle deeplinks when app uses scenes (iOS 13+)
+    func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
+        guard let url = URLContexts.first?.url else { return }
+        if URLComponents(url: url, resolvingAgainstBaseURL: true)?.host == "mmsdk" {
+            MetaMaskSDK.sharedInstance?.handleUrl(url)
+        }
     }
 }

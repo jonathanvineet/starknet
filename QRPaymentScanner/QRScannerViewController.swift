@@ -1,15 +1,28 @@
 import UIKit
 import AVFoundation
+import metamask_ios_sdk
 
 class QRScannerViewController: UIViewController {
     
     @IBOutlet weak var scanButton: UIButton!
     @IBOutlet weak var resultLabel: UILabel!
     @IBOutlet weak var previewView: UIView!
+    // Programmatic connect wallet button
+    private var connectWalletButton: UIButton!
     
     private var captureSession: AVCaptureSession!
     private var previewLayer: AVCaptureVideoPreviewLayer!
     private var isScanning = false
+    // Shared MetaMask SDK instance
+    private lazy var metamaskSDK: MetaMaskSDK = {
+        let appMetadata = AppMetadata(name: "StarknetQR", url: "https://starknet.example")
+        // transport .deeplinking requires Info.plist CFBundleURLSchemes = "starknet"
+        return MetaMaskSDK.shared(
+            appMetadata,
+            transport: .deeplinking(dappScheme: "starknet"),
+            sdkOptions: SDKOptions(infuraAPIKey: "INFURA_API_KEY")
+        )
+    }()
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -46,6 +59,26 @@ class QRScannerViewController: UIViewController {
         previewView.backgroundColor = .black
         previewView.layer.cornerRadius = 10
         previewView.isHidden = true
+
+        // Create connect wallet button
+        connectWalletButton = UIButton(type: .system)
+        connectWalletButton.translatesAutoresizingMaskIntoConstraints = false
+        connectWalletButton.setTitle("Connect Wallet", for: .normal)
+        connectWalletButton.setTitleColor(.white, for: .normal)
+        connectWalletButton.backgroundColor = .systemGreen
+        connectWalletButton.layer.cornerRadius = 10
+        connectWalletButton.titleLabel?.font = UIFont.boldSystemFont(ofSize: 16)
+        connectWalletButton.addTarget(self, action: #selector(connectWalletTapped(_:)), for: .touchUpInside)
+
+        view.addSubview(connectWalletButton)
+
+        // Layout: place below scanButton (if connected via storyboard) or at top-right corner
+        NSLayoutConstraint.activate([
+            connectWalletButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
+            connectWalletButton.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 16),
+            connectWalletButton.widthAnchor.constraint(equalToConstant: 140),
+            connectWalletButton.heightAnchor.constraint(equalToConstant: 44)
+        ])
     }
     
     private func checkCameraPermission() {
@@ -166,6 +199,31 @@ class QRScannerViewController: UIViewController {
             checkCameraPermission()
             if AVCaptureDevice.authorizationStatus(for: .video) == .authorized {
                 setupScanner()
+            }
+        }
+    }
+
+    // MARK: - MetaMask SDK integration
+
+    @objc private func connectWalletTapped(_ sender: UIButton) {
+        // Update UI immediately
+        connectWalletButton.isEnabled = false
+        connectWalletButton.setTitle("Connecting...", for: .normal)
+
+        Task {
+            let connectResult = await metamaskSDK.connect()
+            DispatchQueue.main.async {
+                switch connectResult {
+                case .success:
+                    self.connectWalletButton.setTitle("Connected", for: .normal)
+                    self.connectWalletButton.backgroundColor = .systemBlue
+                    self.resultLabel.text = "Connected: \(self.metamaskSDK.account)"
+                case .failure(let error):
+                    self.connectWalletButton.setTitle("Connect Wallet", for: .normal)
+                    self.connectWalletButton.backgroundColor = .systemGreen
+                    self.showError("Failed to connect: \(error.localizedDescription)")
+                }
+                self.connectWalletButton.isEnabled = true
             }
         }
     }

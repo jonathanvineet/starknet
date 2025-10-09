@@ -12,6 +12,7 @@
 		1234567890ABCDE5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE6 /* Main.storyboard */; };
 		1234567890ABCDE7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE8 /* LaunchScreen.storyboard */; };
 		1234567890ABCDEF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE0 /* AppDelegate.swift */; };
+		22E67A482E97EC76003F49E5 /* metamask-ios-sdk in Frameworks */ = {isa = PBXBuildFile; productRef = 22E67A472E97EC76003F49E5 /* metamask-ios-sdk */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -29,6 +30,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				22E67A482E97EC76003F49E5 /* metamask-ios-sdk in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -108,6 +110,9 @@
 				Base,
 			);
 			mainGroup = 1234567890ABCDD4;
+			packageReferences = (
+				22E67A462E97EC76003F49E5 /* XCRemoteSwiftPackageReference "metamask-ios-sdk" */,
+			);
 			productRefGroup = 1234567890ABCDDE /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -363,6 +368,25 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		22E67A462E97EC76003F49E5 /* XCRemoteSwiftPackageReference "metamask-ios-sdk" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/MetaMask/metamask-ios-sdk";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 0.8.10;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		22E67A472E97EC76003F49E5 /* metamask-ios-sdk */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 22E67A462E97EC76003F49E5 /* XCRemoteSwiftPackageReference "metamask-ios-sdk" */;
+			productName = "metamask-ios-sdk";
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1234567890ABCDD5 /* Project object */;
 }
