@@ -1,19 +1,65 @@
 {
-  "name": "starknet-camera-demo",
+  "name": "starknet-user-vault",
   "version": "1.0.0",
-  "private": true,
-  "main": "node_modules/expo/AppEntry.js",
+  "description": "User Vault Contract for STRK tokens on Starknet Sepolia with Python and JavaScript SDKs",
+  "main": "js_integration.js",
+  "type": "module",
   "scripts": {
+    "build": "cd contracts && scarb build",
+    "clean": "cd contracts && scarb clean",
+    "deploy": "cd contracts && node scripts/deploy.js",
+    "deploy-bash": "cd contracts && ./scripts/deploy.sh",
+    "test-js": "cd contracts && node js_integration.js",
+    "test-py": "cd contracts && python python_integration.py",
+    "setup": "npm install && cd contracts && pip install -r requirements.txt",
+    "compile": "cd contracts && scarb build",
+    "declare": "cd contracts && sncast declare --contract-name user_vault",
     "start": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",
     "web": "expo start --web"
   },
+  "keywords": [
+    "starknet",
+    "cairo",
+    "smart-contract",
+    "vault",
+    "defi",
+    "strk",
+    "payment-gateway",
+    "blockchain"
+  ],
+  "author": "Your Name",
+  "license": "MIT",
   "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.6.1",
     "expo": "~51.0.14",
     "expo-image-picker": "~15.0.7",
     "expo-status-bar": "~1.12.1",
+    "express": "^4.19.2",
+    "helmet": "^7.1.0",
     "react": "18.2.0",
-    "react-native": "0.76.6"
-  }
+    "react-native": "0.76.6",
+    "starknet": "^6.24.1",
+    "winston": "^3.11.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.11.0",
+    "jest": "^29.7.0",
+    "nodemon": "^3.0.3",
+    "typescript": "^5.3.0"
+  },
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/starknet-user-vault.git"
+  },
+  "bugs": {
+    "url": "https://github.com/yourusername/starknet-user-vault/issues"
+  },
+  "homepage": "https://github.com/yourusername/starknet-user-vault#readme"
 }

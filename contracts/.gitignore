@@ -1,0 +1,20 @@
+# Environment variables
+.env
+
+# Build artifacts
+target/
+*.compiled_contract_class.json
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Starkli wallet files
+keystore.json
+account.json
