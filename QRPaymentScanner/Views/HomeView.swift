@@ -6,6 +6,8 @@
 //
 
 import SwiftUI
+import AVFoundation
+import metamask_ios_sdk
 
 struct HomeView: View {
     @StateObject private var supabase = SupabaseManager.shared
@@ -166,33 +168,80 @@ struct HomeView: View {
                 }
             }
             .navigationBarHidden(true)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
-                    Button(action: { showProfile = true }) {
-                        Image(systemName: "person.circle.fill")
-                            .font(.title2)
-                            .foregroundColor(.white)
-                    }
-                }
-                
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(action: {
-                        Task {
-                            try? await supabase.signOut()
-                        }
-                    }) {
-                        Image(systemName: "arrow.right.square.fill")
-                            .font(.title2)
-                            .foregroundColor(.red)
-                    }
-                }
-            }
         }
         .sheet(isPresented: $showQRScanner) {
             QRScannerModal()
         }
         .sheet(isPresented: $showProfile) {
             ProfileView()
+        }
+        // Show Connect button always, even with hidden navigation bar
+        .overlay(alignment: .topTrailing) {
+            ConnectWalletToolbarButton()
+                .padding(.top, 12)
+                .padding(.trailing, 16)
+        }
+    }
+}
+
+// MARK: - Inline Connect Wallet toolbar button
+private struct ConnectWalletToolbarButton: View {
+    @State private var isConnecting = false
+    @State private var isConnected = false
+    @State private var account: String = ""
+
+    private let sdk: MetaMaskSDK = {
+        let appMetadata = AppMetadata(name: "StarknetQR", url: "https://starknet.example")
+        return MetaMaskSDK.shared(
+            appMetadata,
+            transport: .deeplinking(dappScheme: "starknet"),
+            sdkOptions: SDKOptions(infuraAPIKey: "")
+        )
+    }()
+
+    var body: some View {
+        Button(action: connect) {
+            HStack(spacing: 6) {
+                Image(systemName: iconName)
+                Text(buttonTitle)
+            }
+        }
+        .disabled(isConnecting)
+        .foregroundColor(isConnected ? .green : .red)
+        .onAppear {
+            if !sdk.account.isEmpty {
+                isConnected = true
+                account = sdk.account
+            }
+        }
+    }
+
+    private var buttonTitle: String {
+        if isConnected { return "Connected" }
+        if isConnecting { return "Connecting…" }
+        return "Connect"
+    }
+
+    private var iconName: String {
+        if isConnected { return "checkmark.seal.fill" }
+        if isConnecting { return "hourglass" }
+        return "link.circle.fill"
+    }
+
+    private func connect() {
+        isConnecting = true
+        Task {
+            let result = await sdk.connect()
+            await MainActor.run {
+                switch result {
+                case .success:
+                    isConnected = true
+                    account = sdk.account
+                case .failure:
+                    isConnected = false
+                }
+                isConnecting = false
+            }
         }
     }
 }
@@ -244,103 +293,20 @@ struct FeatureCard: View {
 
 struct QRScannerModal: View {
     @Environment(\.dismiss) var dismiss
-    @State private var useNativeScanner = false
+    @State private var livePresented = true
     
     var body: some View {
-        if useNativeScanner {
-            // Use your existing UIKit QR Scanner
-            QRScannerView(isPresented: .constant(true)) { scannedCode in
-                print("Scanned QR Code: \(scannedCode)")
-                dismiss()
-            }
-        } else {
-            // Fancy SwiftUI UI that triggers the native scanner
-            NavigationView {
-                ZStack {
-                    Color.black.ignoresSafeArea()
-                    
-                    VStack(spacing: 30) {
-                        Image(systemName: "qrcode.viewfinder")
-                            .font(.system(size: 100))
-                            .foregroundColor(.red)
-                        
-                        Text("QR Scanner")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        Text("Scan QR codes for quick payments")
-                            .multilineTextAlignment(.center)
-                            .foregroundColor(.gray)
-                            .padding(.horizontal)
-                        
-                        // Placeholder scanner view
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.red, lineWidth: 2)
-                            .frame(width: 250, height: 250)
-                            .overlay(
-                                VStack {
-                                    HStack {
-                                        scannerCorner()
-                                        Spacer()
-                                        scannerCorner()
-                                            .rotationEffect(.degrees(90))
-                                    }
-                                    Spacer()
-                                    HStack {
-                                        scannerCorner()
-                                            .rotationEffect(.degrees(-90))
-                                        Spacer()
-                                        scannerCorner()
-                                            .rotationEffect(.degrees(180))
-                                    }
-                                }
-                                .padding(10)
-                            )
-                        
-                        Button(action: {
-                            useNativeScanner = true
-                        }) {
-                            Text("Start Scanning")
-                                .frame(maxWidth: .infinity)
-                                .padding()
-                                .background(
-                                    LinearGradient(
-                                        colors: [Color(red: 0.8, green: 0, blue: 0), Color(red: 0.6, green: 0, blue: 0)],
-                                        startPoint: .top,
-                                        endPoint: .bottom
-                                    )
-                                )
-                                .foregroundColor(.white)
-                                .cornerRadius(15)
-                                .shadow(color: .red.opacity(0.6), radius: 15)
-                                .padding(.horizontal, 40)
-                        }
-                    }
-                }
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
-                        Button("Close") {
-                            dismiss()
-                        }
-                        .foregroundColor(.red)
-                    }
-                }
-            }
+        // Use the live SwiftUI scanner immediately in the same UI
+        EmbeddedLiveQRScannerView(isPresented: $livePresented) { scannedCode in
+            print("Scanned QR Code: \(scannedCode)")
+            dismiss()
+        }
+        .onChange(of: livePresented) { wasPresented, isNowPresented in
+            if wasPresented && !isNowPresented { dismiss() }
         }
     }
     
-    @ViewBuilder
-    func scannerCorner() -> some View {
-        Path { path in
-            path.move(to: CGPoint(x: 0, y: 20))
-            path.addLine(to: CGPoint(x: 0, y: 0))
-            path.addLine(to: CGPoint(x: 20, y: 0))
-        }
-        .stroke(Color.red, lineWidth: 3)
-        .frame(width: 20, height: 20)
-    }
+    // scannerCorner no longer needed
 }
 
 struct ProfileView: View {
@@ -425,6 +391,135 @@ struct ProfileView: View {
             }
         }
     }
+}
+
+// MARK: - Embedded Live QR Scanner (SwiftUI)
+private struct EmbeddedLiveQRScannerView: View {
+    @Binding var isPresented: Bool
+    var onScan: (String) -> Void
+
+    @State private var permissionDenied = false
+
+    var body: some View {
+        ZStack {
+            EmbeddedCameraPreview(onScan: { code in
+                onScan(code)
+                isPresented = false
+            }, permissionDenied: $permissionDenied)
+            .ignoresSafeArea()
+
+            HStack {
+                Button(action: { isPresented = false }) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 28, weight: .bold))
+                        .foregroundColor(.white)
+                        .shadow(radius: 4)
+                }
+                Spacer()
+            }
+            .padding(.top, 16)
+            .padding(.horizontal, 16)
+            .frame(maxHeight: .infinity, alignment: .top)
+
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(Color.red.opacity(0.8), lineWidth: 3)
+                .frame(width: 260, height: 260)
+        }
+        .alert("Camera Access Required", isPresented: $permissionDenied) {
+            Button("Settings") {
+                if let url = URL(string: UIApplication.openSettingsURLString) { UIApplication.shared.open(url) }
+            }
+            Button("Cancel", role: .cancel) { isPresented = false }
+        } message: {
+            Text("Please enable camera access in Settings to scan QR codes.")
+        }
+    }
+}
+
+// MARK: - Embedded Camera Preview
+private struct EmbeddedCameraPreview: UIViewRepresentable {
+    let onScan: (String) -> Void
+    @Binding var permissionDenied: Bool
+
+    func makeCoordinator() -> Coordinator { Coordinator(onScan: onScan, permissionDenied: $permissionDenied) }
+
+    func makeUIView(context: Context) -> PreviewView {
+        let view = PreviewView()
+        context.coordinator.configureSession(preview: view)
+        return view
+    }
+
+    func updateUIView(_ uiView: PreviewView, context: Context) { }
+
+    final class Coordinator: NSObject, AVCaptureMetadataOutputObjectsDelegate {
+        private let onScan: (String) -> Void
+        @Binding private var permissionDenied: Bool
+        private let session = AVCaptureSession()
+
+        init(onScan: @escaping (String) -> Void, permissionDenied: Binding<Bool>) {
+            self.onScan = onScan
+            self._permissionDenied = permissionDenied
+        }
+
+        func configureSession(preview: PreviewView) {
+            switch AVCaptureDevice.authorizationStatus(for: .video) {
+            case .authorized:
+                setup(preview: preview)
+            case .notDetermined:
+                AVCaptureDevice.requestAccess(for: .video) { granted in
+                    DispatchQueue.main.async {
+                        if granted { self.setup(preview: preview) }
+                        else { self.permissionDenied = true }
+                    }
+                }
+            case .denied, .restricted:
+                permissionDenied = true
+            @unknown default:
+                permissionDenied = true
+            }
+        }
+
+        private func setup(preview: PreviewView) {
+            guard let device = AVCaptureDevice.default(for: .video) else { return }
+            session.beginConfiguration()
+            session.sessionPreset = .high
+
+            do {
+                let input = try AVCaptureDeviceInput(device: device)
+                if session.canAddInput(input) { session.addInput(input) }
+            } catch {
+                print("Camera input error: \(error.localizedDescription)")
+            }
+
+            let output = AVCaptureMetadataOutput()
+            if session.canAddOutput(output) {
+                session.addOutput(output)
+                output.setMetadataObjectsDelegate(self, queue: .main)
+                if output.availableMetadataObjectTypes.contains(.qr) { output.metadataObjectTypes = [.qr] }
+            }
+
+            session.commitConfiguration()
+
+            preview.videoPreviewLayer.session = session
+            preview.videoPreviewLayer.videoGravity = .resizeAspectFill
+
+            DispatchQueue.global(qos: .userInitiated).async { [weak self] in
+                self?.session.startRunning()
+            }
+        }
+
+        func metadataOutput(_ output: AVCaptureMetadataOutput, didOutput metadataObjects: [AVMetadataObject], from connection: AVCaptureConnection) {
+            guard let object = metadataObjects.first as? AVMetadataMachineReadableCodeObject,
+                  let value = object.stringValue else { return }
+            session.stopRunning()
+            onScan(value)
+        }
+    }
+}
+
+private final class PreviewView: UIView {
+    override class var layerClass: AnyClass { AVCaptureVideoPreviewLayer.self }
+    var videoPreviewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
 }
 
 struct ProfileOption: View {

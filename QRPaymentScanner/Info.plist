@@ -38,5 +38,9 @@
 			</array>
 		</dict>
 	</dict>
+
+	<!-- Required for camera access; without this the app will crash when requesting permission -->
+	<key>NSCameraUsageDescription</key>
+	<string>This app uses the camera to scan QR codes.</string>
 </dict>
 </plist>

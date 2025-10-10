@@ -1,4 +1,4 @@
-import UIKit
+import UIKit 
 import AVFoundation
 import metamask_ios_sdk
 
@@ -16,11 +16,11 @@ class QRScannerViewController: UIViewController {
     // Shared MetaMask SDK instance
     private lazy var metamaskSDK: MetaMaskSDK = {
         let appMetadata = AppMetadata(name: "StarknetQR", url: "https://starknet.example")
-        // transport .deeplinking requires Info.plist CFBundleURLSchemes = "starknet"
+        // Deeplinking transport requires Info.plist CFBundleURLSchemes = "starknet"
         return MetaMaskSDK.shared(
             appMetadata,
             transport: .deeplinking(dappScheme: "starknet"),
-            sdkOptions: SDKOptions(infuraAPIKey: "INFURA_API_KEY")
+            sdkOptions: SDKOptions(infuraAPIKey: "") // satisfy signature; not used for connect
         )
     }()
     
