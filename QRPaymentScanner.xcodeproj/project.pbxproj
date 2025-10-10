@@ -7,6 +7,19 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		037776E82E98D8B9002568C5 /* QRPaymentApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037776E72E98D8B8002568C5 /* QRPaymentApp.swift */; };
+		037776EA2E98D8C6002568C5 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037776E92E98D8C4002568C5 /* ContentView.swift */; };
+		037776ED2E98D8DF002568C5 /* HomeView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037776EC2E98D8DE002568C5 /* HomeView.swift */; };
+		037776EF2E98D8E7002568C5 /* LoginView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037776EE2E98D8E6002568C5 /* LoginView.swift */; };
+		037776F12E98D8EF002568C5 /* SignupView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037776F02E98D8EF002568C5 /* SignupView.swift */; };
+		037776F52E98D904002568C5 /* QRScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037776F42E98D903002568C5 /* QRScannerView.swift */; };
+		037776F82E98D91B002568C5 /* SupabaseManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037776F72E98D91A002568C5 /* SupabaseManager.swift */; };
+		037776FB2E98D936002568C5 /* Extensions+Helpers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 037776FA2E98D935002568C5 /* Extensions+Helpers.swift */; };
+		037777072E98DF01002568C5 /* Auth in Frameworks */ = {isa = PBXBuildFile; productRef = 037777062E98DF01002568C5 /* Auth */; };
+		037777092E98DF01002568C5 /* Functions in Frameworks */ = {isa = PBXBuildFile; productRef = 037777082E98DF01002568C5 /* Functions */; };
+		0377770B2E98DF01002568C5 /* Realtime in Frameworks */ = {isa = PBXBuildFile; productRef = 0377770A2E98DF01002568C5 /* Realtime */; };
+		0377770D2E98DF01002568C5 /* Storage in Frameworks */ = {isa = PBXBuildFile; productRef = 0377770C2E98DF01002568C5 /* Storage */; };
+		0377770F2E98DF01002568C5 /* Supabase in Frameworks */ = {isa = PBXBuildFile; productRef = 0377770E2E98DF01002568C5 /* Supabase */; };
 		1234567890ABCDE1 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE2 /* SceneDelegate.swift */; };
 		1234567890ABCDE3 /* QRScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE4 /* QRScannerViewController.swift */; };
 		1234567890ABCDE5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE6 /* Main.storyboard */; };
@@ -16,6 +29,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		037776E72E98D8B8002568C5 /* QRPaymentApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRPaymentApp.swift; sourceTree = "<group>"; };
+		037776E92E98D8C4002568C5 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		037776EC2E98D8DE002568C5 /* HomeView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeView.swift; sourceTree = "<group>"; };
+		037776EE2E98D8E6002568C5 /* LoginView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LoginView.swift; sourceTree = "<group>"; };
+		037776F02E98D8EF002568C5 /* SignupView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SignupView.swift; sourceTree = "<group>"; };
+		037776F42E98D903002568C5 /* QRScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRScannerView.swift; sourceTree = "<group>"; };
+		037776F72E98D91A002568C5 /* SupabaseManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SupabaseManager.swift; sourceTree = "<group>"; };
+		037776FA2E98D935002568C5 /* Extensions+Helpers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "Extensions+Helpers.swift"; sourceTree = "<group>"; };
 		1234567890ABCDDD /* QRPaymentScanner.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = QRPaymentScanner.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		1234567890ABCDE0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		1234567890ABCDE2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
@@ -30,13 +51,52 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				037777092E98DF01002568C5 /* Functions in Frameworks */,
+				037777072E98DF01002568C5 /* Auth in Frameworks */,
+				0377770F2E98DF01002568C5 /* Supabase in Frameworks */,
 				22E67A482E97EC76003F49E5 /* metamask-ios-sdk in Frameworks */,
+				0377770D2E98DF01002568C5 /* Storage in Frameworks */,
+				0377770B2E98DF01002568C5 /* Realtime in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		037776EB2E98D8D4002568C5 /* Views */ = {
+			isa = PBXGroup;
+			children = (
+				037776F42E98D903002568C5 /* QRScannerView.swift */,
+				037776F02E98D8EF002568C5 /* SignupView.swift */,
+				037776EE2E98D8E6002568C5 /* LoginView.swift */,
+				037776EC2E98D8DE002568C5 /* HomeView.swift */,
+			);
+			path = Views;
+			sourceTree = "<group>";
+		};
+		037776F62E98D911002568C5 /* Managers */ = {
+			isa = PBXGroup;
+			children = (
+				037776F72E98D91A002568C5 /* SupabaseManager.swift */,
+			);
+			path = Managers;
+			sourceTree = "<group>";
+		};
+		037776F92E98D927002568C5 /* Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				037776FA2E98D935002568C5 /* Extensions+Helpers.swift */,
+			);
+			path = Helpers;
+			sourceTree = "<group>";
+		};
+		037777042E98D986002568C5 /* Assets.xcasset */ = {
+			isa = PBXGroup;
+			children = (
+			);
+			path = Assets.xcasset;
+			sourceTree = "<group>";
+		};
 		1234567890ABCDD4 = {
 			isa = PBXGroup;
 			children = (
@@ -48,6 +108,12 @@
 		1234567890ABCDD9 /* QRPaymentScanner */ = {
 			isa = PBXGroup;
 			children = (
+				037777042E98D986002568C5 /* Assets.xcasset */,
+				037776F92E98D927002568C5 /* Helpers */,
+				037776F62E98D911002568C5 /* Managers */,
+				037776EB2E98D8D4002568C5 /* Views */,
+				037776E92E98D8C4002568C5 /* ContentView.swift */,
+				037776E72E98D8B8002568C5 /* QRPaymentApp.swift */,
 				1234567890ABCDE0 /* AppDelegate.swift */,
 				1234567890ABCDE2 /* SceneDelegate.swift */,
 				1234567890ABCDE4 /* QRScannerViewController.swift */,
@@ -112,6 +178,7 @@
 			mainGroup = 1234567890ABCDD4;
 			packageReferences = (
 				22E67A462E97EC76003F49E5 /* XCRemoteSwiftPackageReference "metamask-ios-sdk" */,
+				037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			productRefGroup = 1234567890ABCDDE /* Products */;
 			projectDirPath = "";
@@ -140,8 +207,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				1234567890ABCDE3 /* QRScannerViewController.swift in Sources */,
+				037776FB2E98D936002568C5 /* Extensions+Helpers.swift in Sources */,
+				037776EF2E98D8E7002568C5 /* LoginView.swift in Sources */,
+				037776EA2E98D8C6002568C5 /* ContentView.swift in Sources */,
 				1234567890ABCDEF /* AppDelegate.swift in Sources */,
+				037776F52E98D904002568C5 /* QRScannerView.swift in Sources */,
+				037776F12E98D8EF002568C5 /* SignupView.swift in Sources */,
+				037776ED2E98D8DF002568C5 /* HomeView.swift in Sources */,
 				1234567890ABCDE1 /* SceneDelegate.swift in Sources */,
+				037776F82E98D91B002568C5 /* SupabaseManager.swift in Sources */,
+				037776E82E98D8B9002568C5 /* QRPaymentApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -287,7 +362,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3U2SL4BUT9;
+				DEVELOPMENT_TEAM = 33C538YB42;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = QRPaymentScanner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "QR Payment Scanner";
@@ -305,7 +380,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vj.QRPaymentScanner;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rj.QRPaymentScanner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -320,7 +395,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 3U2SL4BUT9;
+				DEVELOPMENT_TEAM = 33C538YB42;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = QRPaymentScanner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "QR Payment Scanner";
@@ -338,7 +413,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.vj.QRPaymentScanner;
+				PRODUCT_BUNDLE_IDENTIFIER = com.rj.QRPaymentScanner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -370,6 +445,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/supabase-community/supabase-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.5.1;
+			};
+		};
 		22E67A462E97EC76003F49E5 /* XCRemoteSwiftPackageReference "metamask-ios-sdk" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/MetaMask/metamask-ios-sdk";
@@ -381,6 +464,31 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		037777062E98DF01002568C5 /* Auth */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Auth;
+		};
+		037777082E98DF01002568C5 /* Functions */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Functions;
+		};
+		0377770A2E98DF01002568C5 /* Realtime */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Realtime;
+		};
+		0377770C2E98DF01002568C5 /* Storage */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Storage;
+		};
+		0377770E2E98DF01002568C5 /* Supabase */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
+			productName = Supabase;
+		};
 		22E67A472E97EC76003F49E5 /* metamask-ios-sdk */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 22E67A462E97EC76003F49E5 /* XCRemoteSwiftPackageReference "metamask-ios-sdk" */;

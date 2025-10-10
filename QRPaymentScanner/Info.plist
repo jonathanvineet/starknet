@@ -2,6 +2,23 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>com.vine.starknet</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>starknet</string>
+			</array>
+		</dict>
+	</array>
+	<key>LSApplicationQueriesSchemes</key>
+	<array>
+		<string>metamask</string>
+	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>
@@ -21,26 +38,5 @@
 			</array>
 		</dict>
 	</dict>
-	
-	<!-- URL scheme required by MetaMask SDK for deeplinking. Make sure the dappScheme below matches this value. -->
-	<key>CFBundleURLTypes</key>
-	<array>
-		<dict>
-			<key>CFBundleTypeRole</key>
-			<string>Editor</string>
-			<key>CFBundleURLName</key>
-			<string>com.vine.starknet</string>
-			<key>CFBundleURLSchemes</key>
-			<array>
-				<string>starknet</string>
-			</array>
-		</dict>
-	</array>
-
-	<!-- Allow canOpenURL and SDK deeplinks to MetaMask -->
-	<key>LSApplicationQueriesSchemes</key>
-	<array>
-		<string>metamask</string>
-	</array>
 </dict>
 </plist>
