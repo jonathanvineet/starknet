@@ -2,7 +2,7 @@
 //  HomeView.swift
 //  QRPaymentScanner
 //
-//  Created by Rehaan John on 09/10/25.
+//  Banking-style UI with full backend functionality
 //
 
 import SwiftUI
@@ -13,179 +13,256 @@ struct HomeView: View {
     @StateObject private var supabase = SupabaseManager.shared
     @State private var showQRScanner = false
     @State private var showProfile = false
-    @State private var animateQRButton = false
-    @State private var pulseAnimation = false
+    @State private var balance: Double = 12453.89
+    @State private var monthlyChange: Double = 432.12
     
     var body: some View {
         NavigationView {
-            ZStack {
-                // Background gradient
-                LinearGradient(
-                    colors: [
-                        Color(red: 0.05, green: 0, blue: 0),
-                        Color.black
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                
-                // Main Content
-                ScrollView {
-                    VStack(spacing: 25) {
-                        // Welcome Section
-                        VStack(spacing: 15) {
-                            Image("deadpool")
-                                .resizable()
-                                .aspectRatio(contentMode: .fit)
-                                .frame(width: 100, height: 100)
-                                .clipShape(Circle())
-                                .overlay(
-                                    Circle()
-                                        .stroke(Color.red, lineWidth: 3)
-                                )
-                                .shadow(color: .red.opacity(0.5), radius: 20)
-                            
-                            Text("Welcome Back!")
-                                .font(.system(size: 28, weight: .bold, design: .rounded))
-                                .foregroundColor(.white)
-                            
-                            Text("Ready for action?")
-                                .foregroundColor(.gray)
-                                .font(.system(size: 16))
-                        }
-                        .padding(.top, 40)
-                        
-                        // Feature Cards
-                        VStack(spacing: 20) {
-                            FeatureCard(
-                                icon: "qrcode.viewfinder",
-                                title: "Quick Scan",
-                                subtitle: "Scan QR codes instantly",
-                                color: .red
-                            )
-                            
-                            FeatureCard(
-                                icon: "creditcard.fill",
-                                title: "Payments",
-                                subtitle: "Send & receive money",
-                                color: .orange
-                            )
-                            
-                            FeatureCard(
-                                icon: "clock.fill",
-                                title: "History",
-                                subtitle: "View recent transactions",
-                                color: .purple
-                            )
-                            
-                            FeatureCard(
-                                icon: "shield.fill",
-                                title: "Security",
-                                subtitle: "Your data is protected",
-                                color: .green
-                            )
-                        }
-                        .padding(.horizontal)
-                        
-                        Spacer(minLength: 100)
-                    }
-                }
-                
-                // Floating QR Button
-                VStack {
-                    Spacer()
-                    
-                    Button(action: {
-                        showQRScanner = true
-                        withAnimation(.spring()) {
-                            animateQRButton.toggle()
-                        }
-                    }) {
-                        ZStack {
-                            // Pulse animation circles
-                            if pulseAnimation {
-                                Circle()
-                                    .stroke(Color.red.opacity(0.3), lineWidth: 2)
-                                    .frame(width: 80, height: 80)
-                                    .scaleEffect(pulseAnimation ? 1.3 : 1.0)
-                                    .opacity(pulseAnimation ? 0 : 0.8)
-                                    .animation(
-                                        .easeInOut(duration: 1.5)
-                                        .repeatForever(autoreverses: false),
-                                        value: pulseAnimation
-                                    )
+            ScrollView {
+                VStack(spacing: 0) {
+                    // Header Section
+                    VStack(alignment: .leading, spacing: 8) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("HELLO")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.gray)
                                 
-                                Circle()
-                                    .stroke(Color.red.opacity(0.2), lineWidth: 2)
-                                    .frame(width: 80, height: 80)
-                                    .scaleEffect(pulseAnimation ? 1.5 : 1.0)
-                                    .opacity(pulseAnimation ? 0 : 0.6)
-                                    .animation(
-                                        .easeInOut(duration: 1.5)
-                                        .repeatForever(autoreverses: false)
-                                        .delay(0.2),
-                                        value: pulseAnimation
-                                    )
+                                if let email = supabase.userEmail {
+                                    Text(email.components(separatedBy: "@").first ?? "User")
+                                        .font(.system(size: 24, weight: .bold))
+                                        .foregroundColor(.primary)
+                                } else {
+                                    Text("User")
+                                        .font(.system(size: 24, weight: .bold))
+                                        .foregroundColor(.primary)
+                                }
+                                
+                                Text("Last login: \(formattedDate())")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.gray)
                             }
                             
-                            // Main button
-                            Circle()
-                                .fill(
-                                    LinearGradient(
-                                        colors: [
-                                            Color(red: 0.9, green: 0, blue: 0),
-                                            Color(red: 0.6, green: 0, blue: 0)
-                                        ],
-                                        startPoint: .topLeading,
-                                        endPoint: .bottomTrailing
-                                    )
-                                )
-                                .frame(width: 70, height: 70)
-                                .overlay(
-                                    Circle()
-                                        .stroke(
-                                            LinearGradient(
-                                                colors: [Color.red, Color.red.opacity(0.5)],
-                                                startPoint: .top,
-                                                endPoint: .bottom
-                                            ),
-                                            lineWidth: 2
-                                        )
-                                )
-                                .shadow(color: .red.opacity(0.8), radius: 20, x: 0, y: 5)
+                            Spacer()
                             
-                            Image(systemName: "qrcode.viewfinder")
-                                .font(.system(size: 30, weight: .bold))
-                                .foregroundColor(.white)
-                                .rotationEffect(.degrees(animateQRButton ? 360 : 0))
+                            // MetaMask Connect Button
+                            ConnectWalletButton()
+                            
+                            // Profile Button
+                            Button(action: {
+                                showProfile = true
+                            }) {
+                                Circle()
+                                    .fill(Color(red: 0.8, green: 0.3, blue: 0.3))
+                                    .frame(width: 50, height: 50)
+                                    .overlay(
+                                        Image(systemName: "person.fill")
+                                            .foregroundColor(.white)
+                                            .font(.system(size: 22))
+                                    )
+                            }
                         }
                     }
-                    .padding(.bottom, 30)
-                }
-                .onAppear {
-                    pulseAnimation = true
+                    .padding(.horizontal, 20)
+                    .padding(.top, 20)
+                    
+                    // Balance Card
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("My Balance")
+                            .font(.system(size: 16))
+                            .foregroundColor(.gray)
+                        
+                        Text("$\(String(format: "%.2f", balance))")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundColor(Color(red: 0.8, green: 0.3, blue: 0.3))
+                        
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.up.right")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.green)
+                            
+                            Text("+$\(String(format: "%.2f", monthlyChange))")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.green)
+                            
+                            Text("this month")
+                                .font(.system(size: 14))
+                                .foregroundColor(.gray)
+                        }
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(24)
+                    .background(Color.gray.opacity(0.05))
+                    .cornerRadius(20)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 24)
+                    
+                    // Action Buttons Grid
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible()),
+                        GridItem(.flexible())
+                    ], spacing: 24) {
+                        ActionButton(icon: "paperplane.fill", title: "Transfer") {
+                            print("Transfer tapped")
+                        }
+                        
+                        ActionButton(icon: "link.circle.fill", title: "Loans") {
+                            print("Loans tapped")
+                        }
+                        
+                        ActionButton(icon: "dollarsign.circle.fill", title: "Deposit") {
+                            print("Deposit tapped")
+                        }
+                        
+                        ActionButton(icon: "arrow.left.arrow.right", title: "Bridge") {
+                            print("Bridge tapped")
+                        }
+                        
+                        ActionButton(icon: "arrow.triangle.2.circlepath", title: "Swap") {
+                            print("Swap tapped")
+                        }
+                        
+                        ActionButton(icon: "gift.fill", title: "Rewards") {
+                            print("Rewards tapped")
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 32)
+                    
+                    // My Accounts Section
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Text("My Accounts")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                print("Add account tapped")
+                            }) {
+                                Text("Add Account")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(Color(red: 0.8, green: 0.3, blue: 0.3))
+                            }
+                        }
+                        
+                        AccountCard(
+                            title: "User Account",
+                            amount: "EUR (€) 352.75",
+                            showPercentage: false
+                        )
+                        
+                        AccountCard(
+                            title: "Savings Account",
+                            amount: "USD ($) 944.30",
+                            showPercentage: true,
+                            percentage: "+12.5%"
+                        )
+                        
+                        AccountCard(
+                            title: "Family Account",
+                            amount: "EUR (€) 125.60",
+                            showPercentage: false
+                        )
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 32)
+                    
+                    // Recent Activity Section
+                    VStack(alignment: .leading, spacing: 16) {
+                        HStack {
+                            Text("Recent Activity")
+                                .font(.system(size: 22, weight: .bold))
+                                .foregroundColor(.primary)
+                            
+                            Spacer()
+                            
+                            Button(action: {
+                                print("View all activity tapped")
+                            }) {
+                                Text("View All")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(Color(red: 0.8, green: 0.3, blue: 0.3))
+                            }
+                        }
+                        
+                        ActivityRow(
+                            title: "QR Payment",
+                            time: "10:30 AM",
+                            amount: "-$4.50",
+                            isPositive: false,
+                            showDot: true
+                        )
+                        
+                        ActivityRow(
+                            title: "Wallet Transfer",
+                            time: "Yesterday",
+                            amount: "+$200.00",
+                            isPositive: true,
+                            showDot: true
+                        )
+                        
+                        ActivityRow(
+                            title: "Cash Top-up",
+                            time: "2 days ago",
+                            amount: "+$100.00",
+                            isPositive: true,
+                            showDot: true
+                        )
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 32)
+                    .padding(.bottom, 100)
                 }
             }
+            .background(Color(UIColor.systemBackground))
             .navigationBarHidden(true)
         }
+        .overlay(
+            // Floating QR Scanner Button
+            VStack {
+                Spacer()
+                HStack {
+                    Spacer()
+                    Button(action: {
+                        showQRScanner = true
+                    }) {
+                        ZStack {
+                            Circle()
+                                .fill(Color(red: 0.8, green: 0.3, blue: 0.3))
+                                .frame(width: 60, height: 60)
+                                .shadow(color: Color(red: 0.8, green: 0.3, blue: 0.3).opacity(0.4), radius: 10, x: 0, y: 5)
+                            
+                            Image(systemName: "qrcode.viewfinder")
+                                .font(.system(size: 28, weight: .semibold))
+                                .foregroundColor(.white)
+                        }
+                    }
+                    .padding(.trailing, 24)
+                    .padding(.bottom, 24)
+                }
+            }
+        )
         .sheet(isPresented: $showQRScanner) {
             QRScannerModal()
         }
         .sheet(isPresented: $showProfile) {
             ProfileView()
         }
-        // Show Connect button always, even with hidden navigation bar
-        .overlay(alignment: .topTrailing) {
-            ConnectWalletToolbarButton()
-                .padding(.top, 12)
-                .padding(.trailing, 16)
-        }
+    }
+    
+    private func formattedDate() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "dd/MM/yyyy"
+        return formatter.string(from: Date())
     }
 }
 
-// MARK: - Inline Connect Wallet toolbar button
-private struct ConnectWalletToolbarButton: View {
+// MARK: - MetaMask Connect Button
+
+private struct ConnectWalletButton: View {
     @State private var isConnecting = false
     @State private var isConnected = false
     @State private var account: String = ""
@@ -201,13 +278,19 @@ private struct ConnectWalletToolbarButton: View {
 
     var body: some View {
         Button(action: connect) {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 Image(systemName: iconName)
+                    .font(.system(size: 16))
                 Text(buttonTitle)
+                    .font(.system(size: 14, weight: .medium))
             }
+            .foregroundColor(isConnected ? .white : .primary)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 10)
+            .background(isConnected ? Color.green : Color.gray.opacity(0.1))
+            .cornerRadius(20)
         }
         .disabled(isConnecting)
-        .foregroundColor(isConnected ? .green : .red)
         .onAppear {
             if !sdk.account.isEmpty {
                 isConnected = true
@@ -225,7 +308,7 @@ private struct ConnectWalletToolbarButton: View {
     private var iconName: String {
         if isConnected { return "checkmark.seal.fill" }
         if isConnecting { return "hourglass" }
-        return "link.circle.fill"
+        return "wallet.pass"
     }
 
     private func connect() {
@@ -246,57 +329,121 @@ private struct ConnectWalletToolbarButton: View {
     }
 }
 
-struct FeatureCard: View {
+// MARK: - Action Button
+
+struct ActionButton: View {
     let icon: String
     let title: String
-    let subtitle: String
-    let color: Color
+    let action: () -> Void
     
     var body: some View {
-        HStack(spacing: 20) {
-            ZStack {
-                RoundedRectangle(cornerRadius: 15)
-                    .fill(color.opacity(0.2))
+        Button(action: action) {
+            VStack(spacing: 12) {
+                Circle()
+                    .fill(Color(red: 0.8, green: 0.3, blue: 0.3))
                     .frame(width: 60, height: 60)
+                    .overlay(
+                        Image(systemName: icon)
+                            .font(.system(size: 24))
+                            .foregroundColor(.white)
+                    )
                 
-                Image(systemName: icon)
-                    .font(.system(size: 28))
-                    .foregroundColor(color)
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.primary)
+            }
+        }
+    }
+}
+
+// MARK: - Account Card
+
+struct AccountCard: View {
+    let title: String
+    let amount: String
+    let showPercentage: Bool
+    var percentage: String = ""
+    
+    var body: some View {
+        Button(action: {
+            print("\(title) tapped")
+        }) {
+            HStack {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(title)
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundColor(.primary)
+                    
+                    Text(amount)
+                        .font(.system(size: 14))
+                        .foregroundColor(.gray)
+                }
+                
+                Spacer()
+                
+                HStack(spacing: 12) {
+                    if showPercentage {
+                        Text(percentage)
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(.green)
+                    }
+                    
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.gray.opacity(0.5))
+                }
+            }
+            .padding(20)
+            .background(Color.gray.opacity(0.05))
+            .cornerRadius(16)
+        }
+    }
+}
+
+// MARK: - Activity Row
+
+struct ActivityRow: View {
+    let title: String
+    let time: String
+    let amount: String
+    let isPositive: Bool
+    let showDot: Bool
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            if showDot {
+                Circle()
+                    .fill(isPositive ? Color.green : Color(red: 0.8, green: 0.3, blue: 0.3))
+                    .frame(width: 8, height: 8)
             }
             
-            VStack(alignment: .leading, spacing: 5) {
+            VStack(alignment: .leading, spacing: 4) {
                 Text(title)
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(.primary)
                 
-                Text(subtitle)
-                    .font(.system(size: 14))
+                Text(time)
+                    .font(.system(size: 13))
                     .foregroundColor(.gray)
             }
             
             Spacer()
             
-            Image(systemName: "chevron.right")
-                .foregroundColor(.gray.opacity(0.5))
+            Text(amount)
+                .font(.system(size: 16, weight: .bold))
+                .foregroundColor(isPositive ? .green : .primary)
         }
-        .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 20)
-                .fill(Color.white.opacity(0.05))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                )
-        )
+        .padding(.vertical, 8)
     }
 }
+
+// MARK: - QR Scanner Modal (Keep your existing implementation)
 
 struct QRScannerModal: View {
     @Environment(\.dismiss) var dismiss
     @State private var livePresented = true
     
     var body: some View {
-        // Use the live SwiftUI scanner immediately in the same UI
         EmbeddedLiveQRScannerView(isPresented: $livePresented) { scannedCode in
             print("Scanned QR Code: \(scannedCode)")
             dismiss()
@@ -305,95 +452,10 @@ struct QRScannerModal: View {
             if wasPresented && !isNowPresented { dismiss() }
         }
     }
-    
-    // scannerCorner no longer needed
 }
 
-struct ProfileView: View {
-    @Environment(\.dismiss) var dismiss
-    @StateObject private var supabase = SupabaseManager.shared
-    
-    var body: some View {
-        NavigationView {
-            ZStack {
-                LinearGradient(
-                    colors: [Color.black, Color(red: 0.1, green: 0, blue: 0)],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-                .ignoresSafeArea()
-                
-                VStack(spacing: 30) {
-                    // Profile Image
-                    Image("deadpool")
-                        .resizable()
-                        .aspectRatio(contentMode: .fit)
-                        .frame(width: 120, height: 120)
-                        .clipShape(Circle())
-                        .overlay(
-                            Circle()
-                                .stroke(Color.red, lineWidth: 3)
-                        )
-                        .shadow(color: .red.opacity(0.5), radius: 20)
-                    
-                    // User Info
-                    VStack(spacing: 10) {
-                        Text("Deadpool")
-                            .font(.title)
-                            .fontWeight(.bold)
-                            .foregroundColor(.white)
-                        
-                        if let email = supabase.session?.user.email {
-                            Text(email)
-                                .foregroundColor(.gray)
-                                .font(.system(size: 14))
-                        }
-                    }
-                    
-                    // Profile Options
-                    VStack(spacing: 15) {
-                        ProfileOption(icon: "person.fill", title: "Edit Profile", color: .blue)
-                        ProfileOption(icon: "bell.fill", title: "Notifications", color: .orange)
-                        ProfileOption(icon: "shield.fill", title: "Privacy", color: .green)
-                        ProfileOption(icon: "questionmark.circle.fill", title: "Help", color: .purple)
-                        ProfileOption(icon: "info.circle.fill", title: "About", color: .cyan)
-                    }
-                    .padding(.horizontal)
-                    
-                    Spacer()
-                    
-                    // Sign Out Button
-                    Button(action: {
-                        Task {
-                            try? await supabase.signOut()
-                            dismiss()
-                        }
-                    }) {
-                        Text("Sign Out")
-                            .frame(maxWidth: .infinity)
-                            .padding()
-                            .background(Color.red)
-                            .foregroundColor(.white)
-                            .cornerRadius(15)
-                            .padding(.horizontal, 40)
-                    }
-                    .padding(.bottom, 30)
-                }
-            }
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        dismiss()
-                    }
-                    .foregroundColor(.red)
-                }
-            }
-        }
-    }
-}
+// MARK: - Embedded Live QR Scanner (Your existing implementation)
 
-// MARK: - Embedded Live QR Scanner (SwiftUI)
 private struct EmbeddedLiveQRScannerView: View {
     @Binding var isPresented: Bool
     var onScan: (String) -> Void
@@ -422,7 +484,7 @@ private struct EmbeddedLiveQRScannerView: View {
             .frame(maxHeight: .infinity, alignment: .top)
 
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color.red.opacity(0.8), lineWidth: 3)
+                .stroke(Color(red: 0.8, green: 0.3, blue: 0.3).opacity(0.8), lineWidth: 3)
                 .frame(width: 260, height: 260)
         }
         .alert("Camera Access Required", isPresented: $permissionDenied) {
@@ -436,7 +498,8 @@ private struct EmbeddedLiveQRScannerView: View {
     }
 }
 
-// MARK: - Embedded Camera Preview
+// MARK: - Embedded Camera Preview (Your existing implementation)
+
 private struct EmbeddedCameraPreview: UIViewRepresentable {
     let onScan: (String) -> Void
     @Binding var permissionDenied: Bool
@@ -522,6 +585,84 @@ private final class PreviewView: UIView {
     var videoPreviewLayer: AVCaptureVideoPreviewLayer { layer as! AVCaptureVideoPreviewLayer }
 }
 
+// MARK: - Profile View (Your existing implementation)
+
+struct ProfileView: View {
+    @Environment(\.dismiss) var dismiss
+    @StateObject private var supabase = SupabaseManager.shared
+    
+    var body: some View {
+        NavigationView {
+            ZStack {
+                Color(UIColor.systemBackground)
+                    .ignoresSafeArea()
+                
+                VStack(spacing: 30) {
+                    Circle()
+                        .fill(Color(red: 0.8, green: 0.3, blue: 0.3))
+                        .frame(width: 120, height: 120)
+                        .overlay(
+                            Image(systemName: "person.fill")
+                                .font(.system(size: 50))
+                                .foregroundColor(.white)
+                        )
+                        .shadow(color: Color(red: 0.8, green: 0.3, blue: 0.3).opacity(0.3), radius: 20)
+                    
+                    VStack(spacing: 10) {
+                        Text("User Profile")
+                            .font(.title)
+                            .fontWeight(.bold)
+                            .foregroundColor(.primary)
+                        
+                        if let email = supabase.session?.user.email {
+                            Text(email)
+                                .foregroundColor(.gray)
+                                .font(.system(size: 14))
+                        }
+                    }
+                    
+                    VStack(spacing: 15) {
+                        ProfileOption(icon: "person.fill", title: "Edit Profile", color: .blue)
+                        ProfileOption(icon: "bell.fill", title: "Notifications", color: .orange)
+                        ProfileOption(icon: "shield.fill", title: "Privacy", color: .green)
+                        ProfileOption(icon: "questionmark.circle.fill", title: "Help", color: .purple)
+                        ProfileOption(icon: "info.circle.fill", title: "About", color: .cyan)
+                    }
+                    .padding(.horizontal)
+                    
+                    Spacer()
+                    
+                    Button(action: {
+                        Task {
+                            try? await supabase.signOut()
+                            dismiss()
+                        }
+                    }) {
+                        Text("Sign Out")
+                            .frame(maxWidth: .infinity)
+                            .padding()
+                            .background(Color(red: 0.8, green: 0.3, blue: 0.3))
+                            .foregroundColor(.white)
+                            .cornerRadius(15)
+                            .padding(.horizontal, 40)
+                    }
+                    .padding(.bottom, 30)
+                }
+                .padding(.top, 40)
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done") {
+                        dismiss()
+                    }
+                    .foregroundColor(Color(red: 0.8, green: 0.3, blue: 0.3))
+                }
+            }
+        }
+    }
+}
+
 struct ProfileOption: View {
     let icon: String
     let title: String
@@ -534,7 +675,7 @@ struct ProfileOption: View {
                 .frame(width: 30)
             
             Text(title)
-                .foregroundColor(.white)
+                .foregroundColor(.primary)
             
             Spacer()
             
@@ -543,9 +684,7 @@ struct ProfileOption: View {
                 .font(.system(size: 14))
         }
         .padding()
-        .background(
-            RoundedRectangle(cornerRadius: 15)
-                .fill(Color.white.opacity(0.05))
-        )
+        .background(Color.gray.opacity(0.05))
+        .cornerRadius(15)
     }
 }
