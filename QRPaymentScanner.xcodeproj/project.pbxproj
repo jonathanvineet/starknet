@@ -26,6 +26,14 @@
 		1234567890ABCDE7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE8 /* LaunchScreen.storyboard */; };
 		1234567890ABCDEF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE0 /* AppDelegate.swift */; };
 		22E67A482E97EC76003F49E5 /* metamask-ios-sdk in Frameworks */ = {isa = PBXBuildFile; productRef = 22E67A472E97EC76003F49E5 /* metamask-ios-sdk */; };
+		5ACFB3762CB922A400B3E7F9 /* StarknetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */; };
+		5ACFB3772CB922A400B3E7F9 /* ChippiPayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */; };
+		5ACFB377A2CB922A400B3E7F9 /* QRPaymentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB377A2CB922A400B3E7F8 /* QRPaymentView.swift */; };
+		5ACFB377B2CB922A400B3E7F9 /* ChippiPayServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB377B2CB922A400B3E7F8 /* ChippiPayServicesView.swift */; };
+		5ACFB377C2CB922A400B3E7F9 /* ChippiWalletCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB377C2CB922A400B3E7F8 /* ChippiWalletCreationView.swift */; };
+		5ACFB377D2CB922A400B3E7F9 /* ServicePurchaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB377D2CB922A400B3E7F8 /* ServicePurchaseView.swift */; };
+		5ACFB3782CB922A400B3E7F9 /* StarknetConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3782CB922A400B3E7F8 /* StarknetConnectView.swift */; };
+		5ACFB3792CB922A400B3E7F9 /* VaultActionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3792CB922A400B3E7F8 /* VaultActionView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -44,6 +52,14 @@
 		1234567890ABCDE9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		1234567890ABCDEA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1234567890ABCDEB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarknetManager.swift; sourceTree = "<group>"; };
+		5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChippiPayManager.swift; sourceTree = "<group>"; };
+		5ACFB377A2CB922A400B3E7F8 /* QRPaymentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRPaymentView.swift; sourceTree = "<group>"; };
+		5ACFB377B2CB922A400B3E7F8 /* ChippiPayServicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChippiPayServicesView.swift; sourceTree = "<group>"; };
+		5ACFB377C2CB922A400B3E7F8 /* ChippiWalletCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChippiWalletCreationView.swift; sourceTree = "<group>"; };
+		5ACFB377D2CB922A400B3E7F8 /* ServicePurchaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicePurchaseView.swift; sourceTree = "<group>"; };
+		5ACFB3782CB922A400B3E7F8 /* StarknetConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarknetConnectView.swift; sourceTree = "<group>"; };
+		5ACFB3792CB922A400B3E7F8 /* VaultActionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultActionView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -70,6 +86,12 @@
 				037776F02E98D8EF002568C5 /* SignupView.swift */,
 				037776EE2E98D8E6002568C5 /* LoginView.swift */,
 				037776EC2E98D8DE002568C5 /* HomeView.swift */,
+				5ACFB3782CB922A400B3E7F8 /* StarknetConnectView.swift */,
+				5ACFB3792CB922A400B3E7F8 /* VaultActionView.swift */,
+				5ACFB377A2CB922A400B3E7F8 /* QRPaymentView.swift */,
+				5ACFB377B2CB922A400B3E7F8 /* ChippiPayServicesView.swift */,
+				5ACFB377C2CB922A400B3E7F8 /* ChippiWalletCreationView.swift */,
+				5ACFB377D2CB922A400B3E7F8 /* ServicePurchaseView.swift */,
 			);
 			path = Views;
 			sourceTree = "<group>";
@@ -78,6 +100,8 @@
 			isa = PBXGroup;
 			children = (
 				037776F72E98D91A002568C5 /* SupabaseManager.swift */,
+				5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */,
+				5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -217,6 +241,14 @@
 				1234567890ABCDE1 /* SceneDelegate.swift in Sources */,
 				037776F82E98D91B002568C5 /* SupabaseManager.swift in Sources */,
 				037776E82E98D8B9002568C5 /* QRPaymentApp.swift in Sources */,
+				5ACFB3762CB922A400B3E7F9 /* StarknetManager.swift in Sources */,
+				5ACFB3772CB922A400B3E7F9 /* ChippiPayManager.swift in Sources */,
+				5ACFB3782CB922A400B3E7F9 /* StarknetConnectView.swift in Sources */,
+				5ACFB3792CB922A400B3E7F9 /* VaultActionView.swift in Sources */,
+				5ACFB377A2CB922A400B3E7F9 /* QRPaymentView.swift in Sources */,
+				5ACFB377B2CB922A400B3E7F9 /* ChippiPayServicesView.swift in Sources */,
+				5ACFB377C2CB922A400B3E7F9 /* ChippiWalletCreationView.swift in Sources */,
+				5ACFB377D2CB922A400B3E7F9 /* ServicePurchaseView.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -362,7 +394,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 33C538YB42;
+				DEVELOPMENT_TEAM = 3U2SL4BUT9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = QRPaymentScanner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "QR Payment Scanner";
@@ -380,7 +412,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rjQRPaymentScanner;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vj.QRPaymentScanner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
@@ -395,7 +427,7 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
-				DEVELOPMENT_TEAM = 33C538YB42;
+				DEVELOPMENT_TEAM = 3U2SL4BUT9;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = QRPaymentScanner/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "QR Payment Scanner";
@@ -413,7 +445,7 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.rjQRPaymentScanner;
+				PRODUCT_BUNDLE_IDENTIFIER = com.vj.QRPaymentScanner;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;

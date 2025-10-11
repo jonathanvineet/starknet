@@ -7,12 +7,18 @@
 
 import SwiftUI
 import AVFoundation
-import metamask_ios_sdk
 
 struct HomeView: View {
     @StateObject private var supabase = SupabaseManager.shared
+    @StateObject private var starknet = StarknetManager.shared
     @State private var showQRScanner = false
+    @State private var showQRPayment = false
     @State private var showProfile = false
+    @State private var showStarknetConnect = false
+    @State private var showDepositView = false
+    @State private var showWithdrawView = false
+    @State private var showTransferView = false
+    @State private var showChippiPayServices = false
     @State private var balance: Double = 12453.89
     @State private var monthlyChange: Double = 432.12
     
@@ -45,8 +51,26 @@ struct HomeView: View {
                             
                             Spacer()
                             
-                            // MetaMask Connect Button
-                            ConnectWalletButton()
+                            // Starknet Connect Button
+                            Button(action: {
+                                if starknet.isConnected {
+                                    starknet.disconnectWallet()
+                                } else {
+                                    showStarknetConnect = true
+                                }
+                            }) {
+                                HStack(spacing: 6) {
+                                    Image(systemName: starknet.isConnected ? "bolt.fill" : "bolt.circle")
+                                        .foregroundColor(starknet.isConnected ? .green : .orange)
+                                    Text(starknet.isConnected ? "Connected" : "Connect")
+                                        .font(.system(size: 12, weight: .medium))
+                                        .foregroundColor(starknet.isConnected ? .green : .orange)
+                                }
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.gray.opacity(0.1))
+                                .cornerRadius(8)
+                            }
                             
                             // Profile Button
                             Button(action: {
@@ -66,26 +90,61 @@ struct HomeView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 20)
                     
-                    // Balance Card
+                    // Vault Balance Card
                     VStack(alignment: .leading, spacing: 12) {
-                        Text("My Balance")
-                            .font(.system(size: 16))
-                            .foregroundColor(.gray)
-                        
-                        Text("$\(String(format: "%.2f", balance))")
-                            .font(.system(size: 48, weight: .bold))
-                            .foregroundColor(Color(red: 0.8, green: 0.3, blue: 0.3))
-                        
-                        HStack(spacing: 8) {
-                            Image(systemName: "arrow.up.right")
-                                .font(.system(size: 12, weight: .bold))
-                                .foregroundColor(.green)
+                        HStack {
+                            Text("Starknet Vault")
+                                .font(.system(size: 16))
+                                .foregroundColor(.gray)
                             
-                            Text("+$\(String(format: "%.2f", monthlyChange))")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.green)
+                            Spacer()
                             
-                            Text("this month")
+                            if starknet.isLoading {
+                                ProgressView()
+                                    .scaleEffect(0.8)
+                            } else {
+                                Button("Refresh") {
+                                    Task {
+                                        await starknet.loadBalances()
+                                    }
+                                }
+                                .font(.system(size: 12))
+                                .foregroundColor(Color(red: 0.8, green: 0.3, blue: 0.3))
+                            }
+                        }
+                        
+                        if starknet.isConnected {
+                            Text("\(String(format: "%.4f", starknet.vaultBalance)) STRK")
+                                .font(.system(size: 42, weight: .bold))
+                                .foregroundColor(Color(red: 0.8, green: 0.3, blue: 0.3))
+                            
+                            HStack(spacing: 16) {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Wallet Balance")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.gray)
+                                    Text("\(String(format: "%.4f", starknet.strkBalance)) STRK")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.secondary)
+                                }
+                                
+                                Spacer()
+                                
+                                VStack(alignment: .trailing, spacing: 2) {
+                                    Text("Network")
+                                        .font(.system(size: 12))
+                                        .foregroundColor(.gray)
+                                    Text("Sepolia")
+                                        .font(.system(size: 14, weight: .semibold))
+                                        .foregroundColor(.blue)
+                                }
+                            }
+                        } else {
+                            Text("Connect to view balance")
+                                .font(.system(size: 24, weight: .bold))
+                                .foregroundColor(.gray)
+                            
+                            Text("Connect your Starknet wallet to access vault features")
                                 .font(.system(size: 14))
                                 .foregroundColor(.gray)
                         }
@@ -97,34 +156,50 @@ struct HomeView: View {
                     .padding(.horizontal, 20)
                     .padding(.top, 24)
                     
-                    // Action Buttons Grid
+                    // Vault Action Buttons Grid
                     LazyVGrid(columns: [
                         GridItem(.flexible()),
                         GridItem(.flexible()),
                         GridItem(.flexible())
                     ], spacing: 24) {
-                        ActionButton(icon: "paperplane.fill", title: "Transfer") {
-                            print("Transfer tapped")
+                        ActionButton(icon: "plus.circle.fill", title: "Deposit", color: .green) {
+                            if starknet.isConnected {
+                                showDepositView = true
+                            } else {
+                                showStarknetConnect = true
+                            }
                         }
                         
-                        ActionButton(icon: "link.circle.fill", title: "Loans") {
-                            print("Loans tapped")
+                        ActionButton(icon: "minus.circle.fill", title: "Withdraw", color: .orange) {
+                            if starknet.isConnected {
+                                showWithdrawView = true
+                            } else {
+                                showStarknetConnect = true
+                            }
                         }
                         
-                        ActionButton(icon: "dollarsign.circle.fill", title: "Deposit") {
-                            print("Deposit tapped")
+                        ActionButton(icon: "arrow.right.circle.fill", title: "Transfer", color: .blue) {
+                            if starknet.isConnected {
+                                showTransferView = true
+                            } else {
+                                showStarknetConnect = true
+                            }
                         }
                         
-                        ActionButton(icon: "arrow.left.arrow.right", title: "Bridge") {
-                            print("Bridge tapped")
+                        ActionButton(icon: "qrcode.viewfinder", title: "QR Pay") {
+                            showQRPayment = true
                         }
                         
-                        ActionButton(icon: "arrow.triangle.2.circlepath", title: "Swap") {
-                            print("Swap tapped")
+                        ActionButton(icon: "bolt.circle.fill", title: "ChippiPay", color: .orange) {
+                            showChippiPayServices = true
                         }
                         
-                        ActionButton(icon: "gift.fill", title: "Rewards") {
-                            print("Rewards tapped")
+                        ActionButton(icon: "chart.line.uptrend.xyaxis", title: "Analytics") {
+                            print("Analytics tapped")
+                        }
+                        
+                        ActionButton(icon: "gear", title: "Settings") {
+                            print("Settings tapped")
                         }
                     }
                     .padding(.horizontal, 20)
@@ -251,6 +326,24 @@ struct HomeView: View {
         .sheet(isPresented: $showProfile) {
             ProfileView()
         }
+        .sheet(isPresented: $showStarknetConnect) {
+            StarknetConnectView()
+        }
+        .sheet(isPresented: $showDepositView) {
+            VaultActionView(actionType: .deposit)
+        }
+        .sheet(isPresented: $showWithdrawView) {
+            VaultActionView(actionType: .withdraw)
+        }
+        .sheet(isPresented: $showTransferView) {
+            VaultActionView(actionType: .transfer)
+        }
+        .sheet(isPresented: $showQRPayment) {
+            QRPaymentView()
+        }
+        .sheet(isPresented: $showChippiPayServices) {
+            ChippiPayServicesView()
+        }
     }
     
     private func formattedDate() -> String {
@@ -260,87 +353,26 @@ struct HomeView: View {
     }
 }
 
-// MARK: - MetaMask Connect Button
-
-private struct ConnectWalletButton: View {
-    @State private var isConnecting = false
-    @State private var isConnected = false
-    @State private var account: String = ""
-
-    private let sdk: MetaMaskSDK = {
-        let appMetadata = AppMetadata(name: "StarknetQR", url: "https://starknet.example")
-        return MetaMaskSDK.shared(
-            appMetadata,
-            transport: .deeplinking(dappScheme: "starknet"),
-            sdkOptions: SDKOptions(infuraAPIKey: "")
-        )
-    }()
-
-    var body: some View {
-        Button(action: connect) {
-            HStack(spacing: 8) {
-                Image(systemName: iconName)
-                    .font(.system(size: 16))
-                Text(buttonTitle)
-                    .font(.system(size: 14, weight: .medium))
-            }
-            .foregroundColor(isConnected ? .white : .primary)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 10)
-            .background(isConnected ? Color.green : Color.gray.opacity(0.1))
-            .cornerRadius(20)
-        }
-        .disabled(isConnecting)
-        .onAppear {
-            if !sdk.account.isEmpty {
-                isConnected = true
-                account = sdk.account
-            }
-        }
-    }
-
-    private var buttonTitle: String {
-        if isConnected { return "Connected" }
-        if isConnecting { return "Connecting…" }
-        return "Connect"
-    }
-
-    private var iconName: String {
-        if isConnected { return "checkmark.seal.fill" }
-        if isConnecting { return "hourglass" }
-        return "wallet.pass"
-    }
-
-    private func connect() {
-        isConnecting = true
-        Task {
-            let result = await sdk.connect()
-            await MainActor.run {
-                switch result {
-                case .success:
-                    isConnected = true
-                    account = sdk.account
-                case .failure:
-                    isConnected = false
-                }
-                isConnecting = false
-            }
-        }
-    }
-}
-
 // MARK: - Action Button
 
 struct ActionButton: View {
     let icon: String
     let title: String
+    let color: Color
     let action: () -> Void
+    
+    init(icon: String, title: String, color: Color = Color(red: 0.8, green: 0.3, blue: 0.3), action: @escaping () -> Void) {
+        self.icon = icon
+        self.title = title
+        self.color = color
+        self.action = action
+    }
     
     var body: some View {
         Button(action: action) {
             VStack(spacing: 12) {
                 Circle()
-                    .fill(Color(red: 0.8, green: 0.3, blue: 0.3))
+                    .fill(color)
                     .frame(width: 60, height: 60)
                     .overlay(
                         Image(systemName: icon)
