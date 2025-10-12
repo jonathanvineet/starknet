@@ -356,9 +356,7 @@ struct HomeView: View {
         .alert("ChippiPay API Test", isPresented: $showChippiPayTest) {
             Button("Run Test") {
                 Task {
-                    let config = ChippiPayConfiguration.shared
-                    let success = await config.testConnection()
-                    testResult = success ? "✅ Connection successful!" : "❌ Connection failed"
+                    await runChippiPayTest()
                 }
             }
             Button("Cancel", role: .cancel) { }
@@ -375,6 +373,23 @@ struct HomeView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "dd/MM/yyyy"
         return formatter.string(from: Date())
+    }
+
+    @MainActor
+    private func runChippiPayTest() async {
+        let manager = ChippiPayManager(environment: .production)
+
+        do {
+            try await manager.fetchAvailableServices()
+
+            if manager.availableServices.isEmpty {
+                testResult = "⚠️ Connected but no services found"
+            } else {
+                testResult = "✅ Success! Found \(manager.availableServices.count) services"
+            }
+        } catch {
+            testResult = "❌ Failed: \(error.localizedDescription)"
+        }
     }
 }
 

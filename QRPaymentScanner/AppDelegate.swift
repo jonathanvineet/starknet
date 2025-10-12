@@ -4,6 +4,7 @@
 //
 
 import UIKit
+import Foundation
 import metamask_ios_sdk
 
 @main
@@ -21,31 +22,66 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: - ChippiPay Configuration
 
     private func configureChippiPay() {
+        let keychain = KeychainHelper.shared
+
         // Check if already configured
-        let config = ChippiPayConfiguration.shared
-
-        if !config.isConfigured() {
-            print("📱 Configuring ChippiPay for first time...")
-            config.configure()
-
-            // Mark as configured
-            UserDefaults.standard.set(true, forKey: "chippiPayConfigured")
-        } else {
+        if let existingKey = keychain.getChippiPayAPIKey(),
+           let existingSecret = keychain.getChippiPaySecretKey(),
+           !existingKey.isEmpty, !existingSecret.isEmpty {
             print("✅ ChippiPay already configured")
-            print(config.getStatus())
+            print("   Public Key: \(existingKey.prefix(20))...")
+            print("   Secret Key: \(existingSecret.prefix(20))...")
+        } else {
+            print("📱 Configuring ChippiPay for first time...")
+
+            // Your ChippiPay API credentials
+            let publicKey = "pk_prod_0f67a3155f8d994796b3ecdb50b8db67"
+            let secretKey = "sk_prod_c035c91fcc9ac3ac6cf7b8a3c2d88bb3c428eecf75d11b18f0006d8b9e84599b"
+
+            // Save to secure keychain
+            let publicKeySaved = keychain.saveChippiPayAPIKey(publicKey)
+            let secretKeySaved = keychain.saveChippiPaySecretKey(secretKey)
+
+            if publicKeySaved && secretKeySaved {
+                print("✅ ChippiPay API keys configured successfully")
+                print("   Public Key: \(publicKey.prefix(20))...")
+                print("   Secret Key: \(secretKey.prefix(20))...")
+            } else {
+                print("❌ Failed to save ChippiPay API keys to keychain")
+            }
         }
 
         // Optional: Test connection on app launch (useful for debugging)
         #if DEBUG
         Task {
-            let success = await config.testConnection()
-            if success {
-                print("🎉 ChippiPay is ready to use!")
-            } else {
-                print("⚠️  ChippiPay connection test failed - check credentials")
-            }
+            await testChippiPayConnection()
         }
         #endif
+    }
+
+    @MainActor
+    private func testChippiPayConnection() async {
+        print("🔄 Testing ChippiPay API connection...")
+
+        let manager = ChippiPayManager(environment: .production)
+
+        do {
+            try await manager.fetchAvailableServices()
+
+            if manager.availableServices.isEmpty {
+                print("⚠️  Connection successful but no services returned")
+                print("   This might be normal if no services are configured in your ChippiPay account")
+            } else {
+                print("✅ Connection successful!")
+                print("   Found \(manager.availableServices.count) available services:")
+                for (index, service) in manager.availableServices.prefix(3).enumerated() {
+                    print("   \(index + 1). \(service.name) (\(service.category))")
+                }
+            }
+            print("🎉 ChippiPay is ready to use!")
+        } catch {
+            print("❌ Connection failed: \(error.localizedDescription)")
+        }
     }
 
     // MARK: UISceneSession Lifecycle
