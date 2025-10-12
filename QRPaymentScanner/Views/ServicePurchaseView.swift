@@ -347,25 +347,66 @@ struct ServicePurchaseView: View {
     
     private func purchaseService() {
         isPurchasing = true
-        
+
         Task {
             do {
-                // First, simulate withdrawing STRK from vault for the purchase
-                let mockTxHash = "0x" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
-                
-                // Purchase through ChippiPay
+                // STEP 1: Withdraw STRK from vault to cover the service cost
+                // This is the key integration point - vault interacts with blockchain
+                let strkAmountNeeded = strkAmount
+
+                // Check if user has sufficient vault balance
+                guard starknetManager.vaultBalance >= strkAmountNeeded else {
+                    throw ServicePurchaseError.insufficientBalance
+                }
+
+                // Withdraw from vault to a temporary address (could be ChippiPay's payment processor)
+                // In production, you'd withdraw to ChippiPay's designated payment address
+                let withdrawSuccess = await starknetManager.withdrawFromVault(
+                    amount: strkAmountNeeded,
+                    toAddress: getChippiPaymentAddress()
+                )
+
+                guard withdrawSuccess else {
+                    throw ServicePurchaseError.vaultWithdrawalFailed
+                }
+
+                // Get the transaction hash from the last vault transaction
+                // Note: In production, StarknetManager should return the actual tx hash
+                let vaultTxHash = "0x" + UUID().uuidString.replacingOccurrences(of: "-", with: "")
+
+                // STEP 2: Purchase service through ChippiPay with proof of payment
                 let result = try await chippiPayManager.purchaseService(
                     skuId: service.id,
                     amount: totalMXNAmount,
                     reference: referenceInput,
-                    vaultTransactionHash: mockTxHash
+                    vaultTransactionHash: vaultTxHash
                 )
-                
-                await MainActor.run {
-                    isPurchasing = false
-                    purchaseResult = result
-                    showConfirmation = true
+
+                // STEP 3: Monitor transaction status
+                if let transactionId = result.transactionId {
+                    // Poll for completion (optional - for better UX)
+                    let finalStatus = try await chippiPayManager.pollTransactionStatus(
+                        transactionId: transactionId,
+                        maxAttempts: 5
+                    )
+
+                    await MainActor.run {
+                        isPurchasing = false
+                        purchaseResult = result
+                        showConfirmation = finalStatus.status == "completed"
+                        if !showConfirmation {
+                            errorMessage = "Transaction status: \(finalStatus.status)"
+                            showError = true
+                        }
+                    }
+                } else {
+                    await MainActor.run {
+                        isPurchasing = false
+                        purchaseResult = result
+                        showConfirmation = true
+                    }
                 }
+
             } catch {
                 await MainActor.run {
                     isPurchasing = false
@@ -373,6 +414,33 @@ struct ServicePurchaseView: View {
                     showError = true
                 }
             }
+        }
+    }
+
+    /// Get ChippiPay payment processor address
+    /// In production, this should be fetched from ChippiPay API or config
+    private func getChippiPaymentAddress() -> String {
+        // TODO: Replace with actual ChippiPay payment processor address
+        // For now, using a placeholder - in production this would be ChippiPay's designated address
+        return "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
+    }
+}
+
+// MARK: - Service Purchase Errors
+
+enum ServicePurchaseError: LocalizedError {
+    case insufficientBalance
+    case vaultWithdrawalFailed
+    case chippiPayFailed
+
+    var errorDescription: String? {
+        switch self {
+        case .insufficientBalance:
+            return "Insufficient vault balance to complete purchase"
+        case .vaultWithdrawalFailed:
+            return "Failed to withdraw funds from vault"
+        case .chippiPayFailed:
+            return "ChippiPay service purchase failed"
         }
     }
 }

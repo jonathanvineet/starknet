@@ -11,7 +11,41 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+
+        // Configure ChippiPay API keys
+        configureChippiPay()
+
         return true
+    }
+
+    // MARK: - ChippiPay Configuration
+
+    private func configureChippiPay() {
+        // Check if already configured
+        let config = ChippiPayConfiguration.shared
+
+        if !config.isConfigured() {
+            print("📱 Configuring ChippiPay for first time...")
+            config.configure()
+
+            // Mark as configured
+            UserDefaults.standard.set(true, forKey: "chippiPayConfigured")
+        } else {
+            print("✅ ChippiPay already configured")
+            print(config.getStatus())
+        }
+
+        // Optional: Test connection on app launch (useful for debugging)
+        #if DEBUG
+        Task {
+            let success = await config.testConnection()
+            if success {
+                print("🎉 ChippiPay is ready to use!")
+            } else {
+                print("⚠️  ChippiPay connection test failed - check credentials")
+            }
+        }
+        #endif
     }
 
     // MARK: UISceneSession Lifecycle

@@ -21,6 +21,8 @@ struct HomeView: View {
     @State private var showChippiPayServices = false
     @State private var balance: Double = 12453.89
     @State private var monthlyChange: Double = 432.12
+    @State private var showChippiPayTest = false
+    @State private var testResult = ""
     
     var body: some View {
         NavigationView {
@@ -201,6 +203,13 @@ struct HomeView: View {
                         ActionButton(icon: "gear", title: "Settings") {
                             print("Settings tapped")
                         }
+
+                        // ChippiPay Test Button (Debug)
+                        #if DEBUG
+                        ActionButton(icon: "network", title: "Test API", color: .purple) {
+                            showChippiPayTest = true
+                        }
+                        #endif
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, 32)
@@ -343,6 +352,22 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showChippiPayServices) {
             ChippiPayServicesView()
+        }
+        .alert("ChippiPay API Test", isPresented: $showChippiPayTest) {
+            Button("Run Test") {
+                Task {
+                    let config = ChippiPayConfiguration.shared
+                    let success = await config.testConnection()
+                    testResult = success ? "✅ Connection successful!" : "❌ Connection failed"
+                }
+            }
+            Button("Cancel", role: .cancel) { }
+        } message: {
+            if testResult.isEmpty {
+                Text("Test the ChippiPay API connection and fetch available services.")
+            } else {
+                Text(testResult)
+            }
         }
     }
     

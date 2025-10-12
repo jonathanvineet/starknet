@@ -71,44 +71,83 @@ public struct ChippiTransactionStatus: Codable {
 // MARK: - ChippiPay Manager
 @MainActor
 public class ChippiPayManager: ObservableObject {
-    
+
     // MARK: - Published Properties
     @Published public var isConnected = false
     @Published public var currentWallet: ChippiWallet?
+    @Published public var currentWalletId: String?
     @Published public var availableServices: [ChippiService] = []
     @Published public var recentTransactions: [ChippiTransactionStatus] = []
     @Published public var isLoading = false
     @Published public var errorMessage: String?
-    
+
     // MARK: - Configuration
-    private let apiKey = "pk_prod_your_api_key_here" // Replace with actual key
-    private let secretKey = "sk_prod_your_secret_key_here" // Replace with actual key
-    private let baseURL = "https://api.chipipay.com/v1"
+    private let api: ChippiPayAPI
+    private let keychain = KeychainHelper.shared
+
+    // MARK: - Initialization
+    public init(environment: ChippiPayEnvironment = .production) {
+        self.api = ChippiPayAPI(environment: environment)
+    }
     
     // MARK: - Wallet Management
     
     /// Creates a new ChippiPay gasless wallet for the user
+    /// This uses the two-step wallet creation process from ChippiPay
     public func createGaslessWallet(userPassword: String, authToken: String, externalUserId: String) async throws -> ChippiWallet {
         isLoading = true
         errorMessage = nil
-        
+
         defer { isLoading = false }
-        
-        // For now, simulate the wallet creation process
-        // In production, this would call the actual ChippiPay API
-        
-        try await Task.sleep(nanoseconds: 2_000_000_000) // Simulate network delay
-        
-        // Simulate successful wallet creation
-        let mockWallet = ChippiWallet(
-            publicKey: "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
-            encryptedPrivateKey: "encrypted_private_key_here"
-        )
-        
-        currentWallet = mockWallet
-        isConnected = true
-        
-        return mockWallet
+
+        do {
+            // Step 1: Prepare wallet creation
+            let prepareResponse = try await api.prepareWalletCreation(
+                authToken: authToken,
+                externalUserId: externalUserId,
+                metadata: ["source": "ios_app"]
+            )
+
+            // Step 2: Save wallet to ChippiPay
+            let saveSuccess = try await api.saveWallet(
+                walletId: prepareResponse.walletId,
+                publicKey: prepareResponse.publicKey,
+                encryptedPrivateKey: prepareResponse.encryptedPrivateKey,
+                authToken: authToken
+            )
+
+            guard saveSuccess else {
+                throw ChippiPayError.apiError("Failed to save wallet")
+            }
+
+            // Create wallet object
+            let wallet = ChippiWallet(
+                publicKey: prepareResponse.publicKey,
+                encryptedPrivateKey: prepareResponse.encryptedPrivateKey
+            )
+
+            // Store wallet locally
+            currentWallet = wallet
+            currentWalletId = prepareResponse.walletId
+            isConnected = true
+
+            // Optionally save wallet ID to keychain for persistence
+            _ = keychain.save(key: "chipi_wallet_id", object: prepareResponse.walletId)
+
+            return wallet
+
+        } catch {
+            errorMessage = "Wallet creation failed: \(error.localizedDescription)"
+            throw error
+        }
+    }
+
+    /// Load existing wallet from keychain
+    public func loadExistingWallet() {
+        if let walletId: String = keychain.retrieve(key: "chipi_wallet_id", type: String.self) {
+            currentWalletId = walletId
+            isConnected = true
+        }
     }
     
     // MARK: - Service Discovery
@@ -117,14 +156,37 @@ public class ChippiPayManager: ObservableObject {
     public func fetchAvailableServices(categories: [String] = []) async throws {
         isLoading = true
         errorMessage = nil
-        
+
         defer { isLoading = false }
-        
-        // Simulate API call to fetch services
-        try await Task.sleep(nanoseconds: 1_000_000_000)
-        
-        // Mock services data
-        let mockServices = [
+
+        do {
+            // If specific categories requested, fetch each separately
+            if !categories.isEmpty {
+                var allServices: [ChippiService] = []
+                for category in categories {
+                    let services = try await api.fetchSKUs(category: category)
+                    allServices.append(contentsOf: services)
+                }
+                availableServices = allServices
+            } else {
+                // Fetch all services
+                let services = try await api.fetchSKUs()
+                availableServices = services
+            }
+
+        } catch {
+            errorMessage = "Failed to fetch services: \(error.localizedDescription)"
+
+            // Fallback to mock data if API fails (for development)
+            availableServices = getMockServices()
+
+            throw error
+        }
+    }
+
+    /// Mock services for development/fallback
+    private func getMockServices() -> [ChippiService] {
+        return [
             ChippiService(
                 id: "telcel_50",
                 providerId: "telcel",
@@ -162,13 +224,12 @@ public class ChippiPayManager: ObservableObject {
                 canCheckSkuReference: false
             )
         ]
-        
-        availableServices = mockServices
     }
     
     // MARK: - Payment Processing
     
     /// Purchase a service using STRK from the vault
+    /// This connects your vault withdrawal with ChippiPay service purchase
     public func purchaseService(
         skuId: String,
         amount: Double,
@@ -177,53 +238,97 @@ public class ChippiPayManager: ObservableObject {
     ) async throws -> ChippiPurchaseResult {
         isLoading = true
         errorMessage = nil
-        
+
         defer { isLoading = false }
-        
+
         guard let wallet = currentWallet else {
             throw ChippiPayError.walletNotConnected
         }
-        
-        // Simulate payment processing
-        try await Task.sleep(nanoseconds: 3_000_000_000)
-        
-        // Simulate successful purchase
-        let result = ChippiPurchaseResult(
-            success: true,
-            transactionId: "chipi_tx_" + UUID().uuidString.prefix(8),
-            status: "completed",
-            message: "Service purchased successfully"
-        )
-        
-        // Add to recent transactions
-        let transaction = ChippiTransactionStatus(
-            id: result.transactionId ?? "unknown",
-            status: "completed",
-            service: skuId,
-            amount: amount,
-            createdAt: ISO8601DateFormatter().string(from: Date())
-        )
-        
-        recentTransactions.insert(transaction, at: 0)
-        
-        return result
+
+        guard let walletId = currentWalletId else {
+            throw ChippiPayError.walletNotConnected
+        }
+
+        do {
+            // Create SKU transaction via ChippiPay API
+            let transactionResponse = try await api.createSKUTransaction(
+                skuId: skuId,
+                reference: reference,
+                amount: amount > 0 ? amount : nil,
+                walletId: walletId,
+                vaultTransactionHash: vaultTransactionHash,
+                metadata: ["platform": "ios", "app_version": "1.0"]
+            )
+
+            // Create purchase result
+            let result = ChippiPurchaseResult(
+                success: true,
+                transactionId: transactionResponse.transactionId,
+                status: transactionResponse.status,
+                message: "Service purchased successfully"
+            )
+
+            // Add to recent transactions
+            let transaction = ChippiTransactionStatus(
+                id: transactionResponse.transactionId,
+                status: transactionResponse.status,
+                service: transactionResponse.skuId,
+                amount: transactionResponse.amount,
+                createdAt: transactionResponse.createdAt
+            )
+
+            recentTransactions.insert(transaction, at: 0)
+
+            return result
+
+        } catch {
+            errorMessage = "Purchase failed: \(error.localizedDescription)"
+            throw error
+        }
     }
     
     // MARK: - Transaction Monitoring
     
     /// Check the status of a ChippiPay transaction
-    func checkTransactionStatus(transactionId: String) async throws -> ChippiTransactionStatus {
-        // Simulate API call
-        try await Task.sleep(nanoseconds: 500_000_000)
-        
-        // Return mock status
-        return ChippiTransactionStatus(
-            id: transactionId,
-            status: "completed",
-            service: "telcel_50",
-            amount: 50.0,
-            createdAt: ISO8601DateFormatter().string(from: Date())
-        )
+    public func checkTransactionStatus(transactionId: String) async throws -> ChippiTransactionStatus {
+        do {
+            let response = try await api.getTransactionStatus(transactionId: transactionId)
+
+            let status = ChippiTransactionStatus(
+                id: response.transactionId,
+                status: response.status,
+                service: response.skuId,
+                amount: response.amount,
+                createdAt: response.createdAt
+            )
+
+            // Update local transactions list
+            if let index = recentTransactions.firstIndex(where: { $0.id == transactionId }) {
+                recentTransactions[index] = status
+            }
+
+            return status
+
+        } catch {
+            throw ChippiPayError.apiError("Failed to check transaction status: \(error.localizedDescription)")
+        }
+    }
+
+    /// Poll transaction status until completed or failed
+    public func pollTransactionStatus(transactionId: String, maxAttempts: Int = 10) async throws -> ChippiTransactionStatus {
+        for attempt in 1...maxAttempts {
+            let status = try await checkTransactionStatus(transactionId: transactionId)
+
+            if status.status == "completed" || status.status == "failed" {
+                return status
+            }
+
+            // Wait before next poll (exponential backoff)
+            let delay = UInt64(min(attempt * 2, 10)) * 1_000_000_000
+            try await Task.sleep(nanoseconds: delay)
+        }
+
+        throw ChippiPayError.apiError("Transaction status polling timeout")
     }
     
     // MARK: - Helper Methods
