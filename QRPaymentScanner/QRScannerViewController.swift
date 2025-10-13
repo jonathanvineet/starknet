@@ -1,6 +1,5 @@
 import UIKit 
 import AVFoundation
-import metamask_ios_sdk
 
 class QRScannerViewController: UIViewController {
     
@@ -13,16 +12,8 @@ class QRScannerViewController: UIViewController {
     private var captureSession: AVCaptureSession!
     private var previewLayer: AVCaptureVideoPreviewLayer!
     private var isScanning = false
-    // Shared MetaMask SDK instance
-    private lazy var metamaskSDK: MetaMaskSDK = {
-        let appMetadata = AppMetadata(name: "StarknetQR", url: "https://starknet.example")
-        // Deeplinking transport requires Info.plist CFBundleURLSchemes = "starknet"
-        return MetaMaskSDK.shared(
-            appMetadata,
-            transport: .deeplinking(dappScheme: "starknet"),
-            sdkOptions: SDKOptions(infuraAPIKey: "") // satisfy signature; not used for connect
-        )
-    }()
+    // Ready Wallet manager
+    private let readyWalletManager = ReadyWalletManager.shared
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -203,7 +194,7 @@ class QRScannerViewController: UIViewController {
         }
     }
 
-    // MARK: - MetaMask SDK integration
+    // MARK: - Argent X Wallet integration
 
     @objc private func connectWalletTapped(_ sender: UIButton) {
         // Update UI immediately
@@ -211,19 +202,27 @@ class QRScannerViewController: UIViewController {
         connectWalletButton.setTitle("Connecting...", for: .normal)
 
         Task {
-            let connectResult = await metamaskSDK.connect()
-            DispatchQueue.main.async {
-                switch connectResult {
-                case .success:
-                    self.connectWalletButton.setTitle("Connected", for: .normal)
-                    self.connectWalletButton.backgroundColor = .systemBlue
-                    self.resultLabel.text = "Connected: \(self.metamaskSDK.account)"
-                case .failure(let error):
+            do {
+                let connected = await readyWalletManager.connectWallet()
+                DispatchQueue.main.async {
+                    if connected {
+                        self.connectWalletButton.setTitle("Connected", for: .normal)
+                        self.connectWalletButton.backgroundColor = .systemBlue
+                        self.resultLabel.text = "Connected to Ready Wallet"
+                    } else {
+                        self.connectWalletButton.setTitle("Connect Wallet", for: .normal)
+                        self.connectWalletButton.backgroundColor = .systemGreen
+                        self.showError("Failed to connect to Ready Wallet")
+                    }
+                    self.connectWalletButton.isEnabled = true
+                }
+            } catch {
+                DispatchQueue.main.async {
                     self.connectWalletButton.setTitle("Connect Wallet", for: .normal)
                     self.connectWalletButton.backgroundColor = .systemGreen
                     self.showError("Failed to connect: \(error.localizedDescription)")
+                    self.connectWalletButton.isEnabled = true
                 }
-                self.connectWalletButton.isEnabled = true
             }
         }
     }

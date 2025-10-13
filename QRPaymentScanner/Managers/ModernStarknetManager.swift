@@ -1,9 +1,11 @@
 import Foundation
 import Combine
-import Starknet
+// import Starknet  // Temporarily commented out to avoid build conflicts
 import metamask_ios_sdk
 
+/*
 // MARK: - Modern Starknet Manager with Native SDKs
+// Temporarily commented out to avoid Starknet.swift build conflicts
 @MainActor
 class ModernStarknetManager: ObservableObject {
     static let shared = ModernStarknetManager()
@@ -443,5 +445,6 @@ enum StarknetError: Error, LocalizedError {
         case .invalidAddress:
             return "Invalid address format"
         }
+*/
     }
 }

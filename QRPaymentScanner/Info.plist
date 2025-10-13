@@ -12,12 +12,19 @@
 			<key>CFBundleURLSchemes</key>
 			<array>
 				<string>starknet</string>
+				<string>qrpaymentscanner</string>
 			</array>
 		</dict>
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
-		<string>metamask</string>
+		<string>argent</string>
+		<string>argentx</string>
+		<string>argentmobile</string>
+		<string>readywallet</string>
+		<string>ready</string>
+		<string>braavos</string>
+		<string>wc</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

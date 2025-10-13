@@ -25,9 +25,11 @@
 		1234567890ABCDE5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE6 /* Main.storyboard */; };
 		1234567890ABCDE7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE8 /* LaunchScreen.storyboard */; };
 		1234567890ABCDEF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE0 /* AppDelegate.swift */; };
-		22E67A482E97EC76003F49E5 /* metamask-ios-sdk in Frameworks */ = {isa = PBXBuildFile; productRef = 22E67A472E97EC76003F49E5 /* metamask-ios-sdk */; };
+
+
 		5ACFB3762CB922A400B3E7F9 /* StarknetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */; };
 		5ACFB3772CB922A400B3E7F9 /* ChippiPayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */; };
+		5ACFB3778CB922A400B3E7F9 /* ReadyWalletManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3778CB922A400B3E7F8 /* ReadyWalletManager.swift */; };
 		5ACFB377A2CB922A400B3E7F9 /* QRPaymentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB377A2CB922A400B3E7F8 /* QRPaymentView.swift */; };
 		5ACFB377B2CB922A400B3E7F9 /* ChippiPayServicesView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB377B2CB922A400B3E7F8 /* ChippiPayServicesView.swift */; };
 		5ACFB377C2CB922A400B3E7F9 /* ChippiWalletCreationView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB377C2CB922A400B3E7F8 /* ChippiWalletCreationView.swift */; };
@@ -54,6 +56,7 @@
 		1234567890ABCDEB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarknetManager.swift; sourceTree = "<group>"; };
 		5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChippiPayManager.swift; sourceTree = "<group>"; };
+		5ACFB3778CB922A400B3E7F8 /* ReadyWalletManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadyWalletManager.swift; sourceTree = "<group>"; };
 		5ACFB377A2CB922A400B3E7F8 /* QRPaymentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QRPaymentView.swift; sourceTree = "<group>"; };
 		5ACFB377B2CB922A400B3E7F8 /* ChippiPayServicesView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChippiPayServicesView.swift; sourceTree = "<group>"; };
 		5ACFB377C2CB922A400B3E7F8 /* ChippiWalletCreationView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChippiWalletCreationView.swift; sourceTree = "<group>"; };
@@ -70,7 +73,6 @@
 				037777092E98DF01002568C5 /* Functions in Frameworks */,
 				037777072E98DF01002568C5 /* Auth in Frameworks */,
 				0377770F2E98DF01002568C5 /* Supabase in Frameworks */,
-				22E67A482E97EC76003F49E5 /* metamask-ios-sdk in Frameworks */,
 				0377770D2E98DF01002568C5 /* Storage in Frameworks */,
 				0377770B2E98DF01002568C5 /* Realtime in Frameworks */,
 			);
@@ -102,6 +104,7 @@
 				037776F72E98D91A002568C5 /* SupabaseManager.swift */,
 				5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */,
 				5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */,
+				5ACFB3778CB922A400B3E7F8 /* ReadyWalletManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -201,7 +204,6 @@
 			);
 			mainGroup = 1234567890ABCDD4;
 			packageReferences = (
-				22E67A462E97EC76003F49E5 /* XCRemoteSwiftPackageReference "metamask-ios-sdk" */,
 				037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */,
 			);
 			productRefGroup = 1234567890ABCDDE /* Products */;
@@ -243,6 +245,7 @@
 				037776E82E98D8B9002568C5 /* QRPaymentApp.swift in Sources */,
 				5ACFB3762CB922A400B3E7F9 /* StarknetManager.swift in Sources */,
 				5ACFB3772CB922A400B3E7F9 /* ChippiPayManager.swift in Sources */,
+				5ACFB3778CB922A400B3E7F9 /* ReadyWalletManager.swift in Sources */,
 				5ACFB3782CB922A400B3E7F9 /* StarknetConnectView.swift in Sources */,
 				5ACFB3792CB922A400B3E7F9 /* VaultActionView.swift in Sources */,
 				5ACFB377A2CB922A400B3E7F9 /* QRPaymentView.swift in Sources */,
@@ -485,14 +488,8 @@
 				minimumVersion = 2.5.1;
 			};
 		};
-		22E67A462E97EC76003F49E5 /* XCRemoteSwiftPackageReference "metamask-ios-sdk" */ = {
-			isa = XCRemoteSwiftPackageReference;
-			repositoryURL = "https://github.com/MetaMask/metamask-ios-sdk";
-			requirement = {
-				kind = upToNextMajorVersion;
-				minimumVersion = 0.8.10;
-			};
-		};
+
+
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -521,11 +518,8 @@
 			package = 037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
 		};
-		22E67A472E97EC76003F49E5 /* metamask-ios-sdk */ = {
-			isa = XCSwiftPackageProductDependency;
-			package = 22E67A462E97EC76003F49E5 /* XCRemoteSwiftPackageReference "metamask-ios-sdk" */;
-			productName = "metamask-ios-sdk";
-		};
+
+
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1234567890ABCDD5 /* Project object */;

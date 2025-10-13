@@ -271,7 +271,7 @@ public class ChippiPayAPI {
         let url = URL(string: environment.baseURL + endpoint)!
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
-        addHeaders(to: &request)
+        try await addHeaders(to: &request)
 
         return try await performRequest(request: request)
     }
@@ -281,7 +281,7 @@ public class ChippiPayAPI {
         let url = URL(string: environment.baseURL + endpoint)!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
-        addHeaders(to: &request)
+        try await addHeaders(to: &request)
 
         request.httpBody = try JSONEncoder().encode(body)
 
@@ -289,10 +289,38 @@ public class ChippiPayAPI {
     }
 
     /// Add authentication headers
-    private func addHeaders(to request: inout URLRequest) {
+    private func addHeaders(to request: inout URLRequest) async throws {
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue("Bearer \(secretKey)", forHTTPHeaderField: "Authorization")
+        
+        // Determine authentication method based on endpoint
+        let endpoint = request.url?.path ?? ""
+        let isWalletEndpoint = endpoint.contains("/chipi-wallets")
+        
+        if isWalletEndpoint {
+            // Wallet endpoints require JWT tokens
+            let jwtToken = await MainActor.run {
+                return SupabaseManager.shared.session?.accessToken
+            }
+            
+            if let token = jwtToken {
+                print("🔑 Using JWT token for wallet endpoint: \(endpoint)")
+                request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+            } else {
+                print("⚠️ No JWT token available for wallet endpoint: \(endpoint)")
+                throw ChippiPayAPIError.authenticationFailed("JWT token required for wallet operations")
+            }
+        } else {
+            // Service endpoints require secret key
+            print("🔐 Using secret key for service endpoint: \(endpoint)")
+            request.setValue("Bearer \(secretKey)", forHTTPHeaderField: "Authorization")
+        }
+        
         request.setValue(apiKey, forHTTPHeaderField: "x-api-key")
+        
+        // Debug: Log authentication headers (redacted)
+        print("📡 ChippiPay API Headers:")
+        print("   Authorization: Bearer [TOKEN_LENGTH: \(request.value(forHTTPHeaderField: "Authorization")?.count ?? 0)]")
+        print("   x-api-key: \(apiKey.prefix(10))...")
     }
 
     /// Perform URLRequest and decode response
@@ -335,6 +363,7 @@ public enum ChippiPayAPIError: LocalizedError {
     case decodingError(String)
     case missingCredentials
     case invalidResponse
+    case authenticationFailed(String)
 
     public var errorDescription: String? {
         switch self {
@@ -350,6 +379,8 @@ public enum ChippiPayAPIError: LocalizedError {
             return "ChippiPay API credentials not configured"
         case .invalidResponse:
             return "Invalid API response"
+        case .authenticationFailed(let message):
+            return "Authentication failed: \(message)"
         }
     }
 }
@@ -594,7 +625,7 @@ public class ChippiPayManager: ObservableObject {
 
         defer { isLoading = false }
 
-        guard let wallet = currentWallet else {
+        guard currentWallet != nil else {
             throw ChippiPayError.walletNotConnected
         }
 

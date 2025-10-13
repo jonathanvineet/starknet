@@ -5,7 +5,6 @@
 
 import UIKit
 import SwiftUI
-import metamask_ios_sdk
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -56,11 +55,15 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to restore the scene back to its current state.
     }
 
-    // Handle deeplink return from MetaMask (iOS 13+ scene-based apps)
+    // Handle deeplink return from Ready Wallet (iOS 13+ scene-based apps)
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
-        if URLComponents(url: url, resolvingAgainstBaseURL: true)?.host == "mmsdk" {
-            MetaMaskSDK.sharedInstance?.handleUrl(url)
+        
+        print("🔗 SceneDelegate received URL: \(url.absoluteString)")
+        
+        // Handle wallet callback responses
+        if url.scheme == "starknet" || url.scheme == "qrpaymentscanner" {
+            ReadyWalletManager.shared.handleReadyCallback(url: url)
         }
     }
 }
