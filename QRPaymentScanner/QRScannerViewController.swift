@@ -2,6 +2,8 @@ import UIKit
 import AVFoundation
 
 class QRScannerViewController: UIViewController {
+    // Callback to deliver scanned QR content when embedded in SwiftUI
+    var onScanComplete: ((String) -> Void)?
     
     @IBOutlet weak var scanButton: UIButton!
     @IBOutlet weak var resultLabel: UILabel!
@@ -202,27 +204,18 @@ class QRScannerViewController: UIViewController {
         connectWalletButton.setTitle("Connecting...", for: .normal)
 
         Task {
-            do {
-                let connected = await readyWalletManager.connectWallet()
-                DispatchQueue.main.async {
-                    if connected {
-                        self.connectWalletButton.setTitle("Connected", for: .normal)
-                        self.connectWalletButton.backgroundColor = .systemBlue
-                        self.resultLabel.text = "Connected to Ready Wallet"
-                    } else {
-                        self.connectWalletButton.setTitle("Connect Wallet", for: .normal)
-                        self.connectWalletButton.backgroundColor = .systemGreen
-                        self.showError("Failed to connect to Ready Wallet")
-                    }
-                    self.connectWalletButton.isEnabled = true
-                }
-            } catch {
-                DispatchQueue.main.async {
+            let connected = await readyWalletManager.connectWallet()
+            DispatchQueue.main.async {
+                if connected {
+                    self.connectWalletButton.setTitle("Connected", for: .normal)
+                    self.connectWalletButton.backgroundColor = .systemBlue
+                    self.resultLabel.text = "Connected to Ready Wallet"
+                } else {
                     self.connectWalletButton.setTitle("Connect Wallet", for: .normal)
                     self.connectWalletButton.backgroundColor = .systemGreen
-                    self.showError("Failed to connect: \(error.localizedDescription)")
-                    self.connectWalletButton.isEnabled = true
+                    self.showError("Failed to connect to Ready Wallet")
                 }
+                self.connectWalletButton.isEnabled = true
             }
         }
     }
@@ -243,6 +236,10 @@ extension QRScannerViewController: AVCaptureMetadataOutputObjectsDelegate {
             guard let stringValue = readableObject.stringValue else { return }
             
             stopScanner()
+            if let handler = onScanComplete {
+                handler(stringValue)
+                return
+            }
             showQRResult(stringValue)
         }
     }

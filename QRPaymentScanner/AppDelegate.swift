@@ -5,19 +5,127 @@
 
 import UIKit
 import Foundation
+import ReownAppKit
+import WalletConnectNetworking
+import WalletConnectRelay
+import WalletConnectSigner
+import Combine
+import CryptoKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
+        
+        // CRITICAL: Configure Reown AppKit FIRST before any other initialization
+        configureReownAppKit()
 
         // Configure ChippiPay API keys
         configureChippiPay()
 
         return true
     }
-
+    
+    // MARK: - Reown AppKit Configuration
+    
+    private func configureReownAppKit() {
+        print("🔧 Configuring Reown AppKit...")
+        
+        let projectId = "18b7d657eedae828d0e6d780a80eded9" // Your Reown Project ID
+        
+        let metadata = AppMetadata(
+            name: "QRPaymentScanner",
+            description: "Starknet Payment Scanner with Braavos wallet integration",
+            url: "https://qrpaymentscanner.app",
+            icons: ["https://qrpaymentscanner.app/icon.png"],
+            redirect: try! AppMetadata.Redirect(native: "qrpaymentscanner://", universal: nil)
+        )
+        
+        // IMPORTANT: Configure Networking BEFORE AppKit
+        // This is required for WalletConnect protocol communication
+        Networking.configure(
+            groupIdentifier: "group.com.qrpaymentscanner.walletconnect",
+            projectId: projectId,
+            socketFactory: SocketFactory()
+        )
+        
+        // Define Starknet networks and methods
+        let starknetMethods: Set<String> = [
+            "starknet_requestAccounts",
+            "starknet_signTypedData",
+            "starknet_sendTransaction"
+        ]
+        
+        let starknetEvents: Set<String> = ["accountsChanged", "chainChanged"]
+        
+        let starknetChains = [
+            Blockchain("starknet:SN_MAIN")!,
+            Blockchain("starknet:SN_SEPOLIA")!
+        ]
+        
+        let starknetNamespace = ProposalNamespace(
+            chains: starknetChains,
+            methods: starknetMethods,
+            events: starknetEvents
+        )
+        
+        let sessionParams = SessionParams(
+            namespaces: ["starknet": starknetNamespace],
+            sessionProperties: nil
+        )
+        
+        // Create crypto provider for Starknet
+        let cryptoProvider = StarknetCryptoProvider()
+        
+        // Configure custom wallets for Starknet
+        let customWallets = [
+            // Braavos Wallet
+            Wallet(
+                id: "braavos",
+                name: "Braavos",
+                homepage: "https://braavos.app/",
+                imageUrl: "https://braavos.app/icon.png",
+                order: 1,
+                mobileLink: "braavos://",
+                linkMode: nil
+            ),
+            // Ready Wallet
+            Wallet(
+                id: "bc949c5d968ae81310268bf9193f9c9fb7bb4e1283e1284af8f2bd4992535fd6",
+                name: "Ready Wallet",
+                homepage: "https://readywallet.app/",
+                imageUrl: "https://readywallet.app/icon.png",
+                order: 2,
+                mobileLink: "readywallet://",
+                linkMode: nil
+            )
+        ]
+        
+        // Recommended wallet IDs (Ready Wallet from WalletGuide)
+        let recommendedWalletIds = [
+            "bc949c5d968ae81310268bf9193f9c9fb7bb4e1283e1284af8f2bd4992535fd6" // Ready Wallet
+        ]
+        
+        // Configure AppKit with Starknet support and custom wallets
+        AppKit.configure(
+            projectId: projectId,
+            metadata: metadata,
+            crypto: cryptoProvider,
+            sessionParams: sessionParams,
+            authRequestParams: nil,
+            recommendedWalletIds: recommendedWalletIds,
+            customWallets: customWallets
+        )
+        
+        print("✅ Reown AppKit configured successfully")
+        print("   Project ID: \(projectId)")
+        print("   Starknet networks: SN_MAIN, SN_SEPOLIA")
+        print("   Supported methods: \(starknetMethods)")
+        print("   Custom wallets: Braavos, Ready Wallet")
+        print("   Recommended: Ready Wallet")
+    }
+    
     // MARK: - ChippiPay Configuration
 
     private func configureChippiPay() {
@@ -101,6 +209,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
         print("🔗 AppDelegate handling URL: \(url.absoluteString)")
         
+        // First, let AppKit handle WalletConnect deep links
+        // This is important for Braavos and other WalletConnect-based wallet callbacks
+        AppKit.instance.handleDeeplink(url)
+        
         // Handle Ready Wallet callbacks
         if url.scheme == "starknet" || 
            url.scheme == "qrpaymentscanner" ||
@@ -109,6 +221,98 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
             return true
         }
         
-        return false
+        return true // AppKit handled it
     }
 }
+
+// MARK: - Starknet Crypto Provider
+// Simplified crypto provider for Starknet - not using Ethereum-specific functions
+struct StarknetCryptoProvider: CryptoProvider {
+    
+    public func recoverPubKey(signature: EthereumSignature, message: Data) throws -> Data {
+        // For Starknet, we don't need Ethereum public key recovery
+        // This is only called for EVM chains
+        throw NSError(domain: "StarknetCrypto", code: 1, userInfo: [NSLocalizedDescriptionKey: "Ethereum signature recovery not supported for Starknet"])
+    }
+    
+    public func keccak256(_ data: Data) -> Data {
+        // For Starknet, use native CryptoKit hashing
+        // For WalletConnect protocol-level operations only
+        return Data(SHA256.hash(data: data))
+    }
+}
+
+// MARK: - Socket Factory
+// Basic socket factory implementation for WalletConnect networking
+struct SocketFactory: WebSocketFactory {
+    func create(with url: URL) -> WebSocketConnecting {
+        return DefaultWebSocket(url: url)
+    }
+}
+
+// MARK: - Default WebSocket Implementation
+class DefaultWebSocket: WebSocketConnecting {
+    var request: URLRequest
+    var onConnect: (() -> Void)?
+    var onDisconnect: ((Error?) -> Void)?
+    var onText: ((String) -> Void)?
+    
+    private var task: URLSessionWebSocketTask?
+    private let session: URLSession
+    private(set) var isConnected: Bool = false
+    
+    init(url: URL) {
+        self.request = URLRequest(url: url)
+        self.session = URLSession(configuration: .default)
+    }
+    
+    func connect() {
+        task = session.webSocketTask(with: request)
+        task?.resume()
+        isConnected = true
+        onConnect?()
+        receiveMessage()
+    }
+    
+    func disconnect() {
+        task?.cancel(with: .goingAway, reason: nil)
+        isConnected = false
+        onDisconnect?(nil)
+    }
+    
+    func write(string: String, completion: (() -> Void)?) {
+        let message = URLSessionWebSocketTask.Message.string(string)
+        task?.send(message) { error in
+            if let error = error {
+                print("WebSocket write error: \(error)")
+            }
+            completion?()
+        }
+    }
+    
+    private func receiveMessage() {
+        task?.receive { [weak self] result in
+            switch result {
+            case .success(let message):
+                switch message {
+                case .string(let text):
+                    self?.onText?(text)
+                case .data(let data):
+                    if let text = String(data: data, encoding: .utf8) {
+                        self?.onText?(text)
+                    }
+                @unknown default:
+                    break
+                }
+                // Continue receiving messages
+                self?.receiveMessage()
+            case .failure(let error):
+                print("WebSocket receive error: \(error)")
+                self?.isConnected = false
+                self?.onDisconnect?(error)
+            }
+        }
+    }
+}
+
+

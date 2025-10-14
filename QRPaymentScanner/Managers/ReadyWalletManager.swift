@@ -2,7 +2,7 @@
 //  ReadyWalletManager.swift
 //  QRPaymentScanner
 //
-//  Enhanced Ready Wallet integration with universal links and direct app opening
+//  Enhanced Ready Wallet integration with multiple scheme detection
 //
 
 import Foundation
@@ -31,229 +31,325 @@ public class ReadyWalletManager: ObservableObject {
     private var connectionContinuation: CheckedContinuation<Bool, Never>?
     private var connectionTimer: Timer?
     
+    // Try multiple possible URL schemes for Ready/Argent (Ready is formerly Argent)
+    // Note: canOpenURL requires these schemes in Info.plist LSApplicationQueriesSchemes (already configured)
+    private let possibleSchemes = [
+        // Ready (new) app
+        "readywallet",
+        "ready",
+        // Argent (legacy naming but still used by Ready app)
+        "argent",
+        "argentx",
+        "argentmobile",
+        // Less-likely/legacy variants as fallback
+        "ready-wallet",
+        "rwallet"
+    ]
+    
+    private var detectedScheme: String?
+    
     private init() {}
     
     // MARK: - Wallet Detection
     
     public func isReadyWalletInstalled() -> Bool {
-        print("🔍 Checking Ready Wallet installation...")
+    print("🔍 Checking Ready/Argent wallet installation...")
+        print("   Testing multiple URL schemes...")
         
-        // Check if Ready Wallet URL scheme can be opened
-        guard let url = URL(string: "ready://") else {
-            print("❌ Invalid URL scheme")
-            return false
+        // Test all possible schemes
+        for scheme in possibleSchemes {
+            guard let url = URL(string: "\(scheme)://") else { continue }
+            
+            if UIApplication.shared.canOpenURL(url) {
+                print("✅ Ready Wallet detected with scheme: \(scheme)://")
+                detectedScheme = scheme
+                return true
+            } else {
+                print("   ❌ Scheme not available: \(scheme)://")
+            }
         }
         
-        let canOpen = UIApplication.shared.canOpenURL(url)
-        print(canOpen ? "✅ Ready Wallet detected" : "⚠️ Ready Wallet not detected")
+    print("⚠️ No URL scheme detected for Ready/Argent")
+        print("💡 This doesn't mean the app isn't installed!")
+        print("💡 The app might not register a custom URL scheme")
         
-        return canOpen
+        // Ready Wallet might be installed but not expose a URL scheme
+        // We'll try to open it anyway using the universal link
+        return false
+    }
+    
+    public func forceDetectWallet() async -> Bool {
+        print("🔍 Force detecting Ready Wallet by attempting to open...")
+        
+        // Try each scheme and see if any successfully opens
+        for scheme in possibleSchemes {
+            guard let url = URL(string: "\(scheme)://") else { continue }
+            
+            let opened = await withCheckedContinuation { continuation in
+                DispatchQueue.main.async {
+                    UIApplication.shared.open(url, options: [:]) { success in
+                        if success {
+                            print("✅ Successfully opened with scheme: \(scheme)://")
+                            self.detectedScheme = scheme
+                        }
+                        continuation.resume(returning: success)
+                    }
+                }
+            }
+            
+            if opened {
+                return true
+            }
+        }
+        
+        print("⚠️ Could not open with any known URL scheme")
+        return false
     }
     
     // MARK: - Connection Management
     
     public func connectWallet(network: String = "sepolia") async -> Bool {
-        print("🚀 Starting Ready Wallet connection with network: \(network)")
-        
-        // Check if wallet is installed first
-        guard isReadyWalletInstalled() else {
-            print("❌ Ready Wallet not installed")
-            errorMessage = "Ready Wallet is not installed"
-            await promptInstallation()
-            return false
-        }
+    print("🚀 Starting Ready/Argent wallet connection")
+        print("   Network: \(network)")
         
         isConnecting = true
+        connectionStatus = .connecting
         errorMessage = ""
         
         defer {
-            isConnecting = false
-        }
-        
-        do {
-            // Try to open Ready Wallet with network parameter
-            if await tryReadyWalletConnection(network: network) {
-                return await waitForConnection()
-            }
-            
-            // If direct connection fails, try app store
-            if await tryAppStoreConnection() {
-                return false // User needs to install first
-            }
-            
-            throw WalletError.connectionFailed
-            
-        } catch {
-            print("❌ Connection error: \(error)")
-            errorMessage = "Failed to connect: \(error.localizedDescription)"
-            return false
-        }
-    }
-    
-    // MARK: - Connection Methods
-    
-    private func tryReadyWalletConnection(network: String) async -> Bool {
-        print("🔗 Attempting Ready Wallet connection with network: \(network)")
-        
-        // Build proper deep link with network parameter
-        let connectionURL = buildConnectionURL(network: network)
-        
-        print("📱 Opening Ready Wallet with URL: \(connectionURL.absoluteString)")
-        
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.main.async {
-                UIApplication.shared.open(connectionURL, options: [:]) { success in
-                    if !success {
-                        print("❌ Failed to open Ready Wallet")
-                        self.errorMessage = "Could not open Ready Wallet"
-                    } else {
-                        print("✅ Ready Wallet opened successfully")
-                    }
-                    continuation.resume(returning: success)
-                }
+            if !isConnected {
+                isConnecting = false
             }
         }
-    }
-    
-    private func buildConnectionURL(network: String) -> URL {
-        // Build proper deep link with network parameter
-        var components = URLComponents()
-        components.scheme = "ready"
-        components.host = "connect"
         
-        // Get your app's callback URL
-        let callbackURL = "qrpaymentscanner://ready/callback"
+        // First, try to detect and open the wallet
+        let walletOpened = await openReadyWallet(network: network)
         
-        components.queryItems = [
-            URLQueryItem(name: "network", value: network),
-            URLQueryItem(name: "callback", value: callbackURL)
-        ]
-        
-        return components.url ?? URL(string: "ready://connect?network=\(network)")!
-    }
-    
-    private func promptInstallation() async {
-        print("📋 Prompting user to install Ready Wallet")
-        
-        await MainActor.run {
-            errorMessage = "Ready Wallet is required. Please install it from the App Store."
+        if !walletOpened {
+            print("❌ Could not open Ready Wallet")
+            errorMessage = "Could not open Ready Wallet. Please open it manually."
+            connectionStatus = .failed
+            
+            // Show instructions for manual connection
+            await showManualConnectionInstructions()
+            
+            // Still wait for potential callback
+            return await waitForConnection(timeout: 120) // 2 minutes for manual
         }
         
-        // Redirect to App Store
-        _ = await tryAppStoreConnection()
+        print("✅ Ready Wallet opened, waiting for connection callback...")
+        return await waitForConnection(timeout: 60)
     }
     
-    private func waitForConnection() async -> Bool {
-        print("⏳ Waiting for connection callback...")
+    private func openReadyWallet(network: String) async -> Bool {
+    print("📱 Attempting to open Ready/Argent wallet app...")
         
-        // Wait for up to 30 seconds for the connection callback
-        for _ in 0..<30 {
-            if connectionStatus == .connected {
-                print("✅ Connection successful!")
+        // Strategy 1: Try detected scheme
+        if let scheme = detectedScheme {
+            print("   Trying detected scheme: \(scheme)://")
+            if await tryOpenWithScheme(scheme, network: network) {
                 return true
-            } else if connectionStatus == .disconnected {
-                print("❌ Connection failed or rejected")
-                return false
             }
-            
-            try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
         }
         
-        print("⏰ Connection timeout")
-        await MainActor.run {
-            connectionStatus = .disconnected
-            errorMessage = "Connection timeout. Please try again."
+        // Strategy 2: Try all possible schemes
+        print("   Trying all possible schemes...")
+        for scheme in possibleSchemes {
+            if await tryOpenWithScheme(scheme, network: network) {
+                detectedScheme = scheme
+                return true
+            }
         }
+        
+        // Strategy 3: Try universal link (most reliable for apps without URL schemes)
+        print("   Trying universal link...")
+        if await tryUniversalLink() {
+            return true
+        }
+        
+        // Strategy 4: Direct App Store link (will open the app if installed)
+        print("   Trying App Store link (may open installed app)...")
+        if await tryAppStoreLink() {
+            return true
+        }
+        
         return false
     }
     
-    private func tryDirectAppConnection() async -> Bool {
-        print("📱 Attempting direct app connection...")
+    private func tryOpenWithScheme(_ scheme: String, network: String) async -> Bool {
+        let callbackURL = "qrpaymentscanner://ready/callback"
+        let encodedCallback = callbackURL.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? callbackURL
+
+        // Try multiple URL formats (most-to-least specific)
+        // We avoid requiring a WalletConnect URI here to simply bring app to foreground
+        var attempts: [String] = []
+
+        // Common open intents
+        attempts.append(contentsOf: [
+            "\(scheme)://app",
+            "\(scheme)://open",
+            "\(scheme)://open?network=\(network)",
+            "\(scheme)://connect?network=\(network)&callback=\(encodedCallback)",
+            "\(scheme)://wc", // some wallets respond to wc without uri to open landing
+            "\(scheme)://" // bare open
+        ])
+
+        // Argent-specific known patterns (Ready often still responds to these)
+        if scheme.hasPrefix("argent") {
+            attempts.insert("argent://app", at: 0)
+            attempts.insert("argentx://app", at: 0)
+        }
+
+        for urlString in attempts {
+            guard let url = URL(string: urlString) else { continue }
+
+            let success = await withCheckedContinuation { continuation in
+                DispatchQueue.main.async {
+                    UIApplication.shared.open(url, options: [:]) { result in
+                        continuation.resume(returning: result)
+                    }
+                }
+            }
+
+            if success {
+                print("   ✅ Opened with: \(urlString)")
+                return true
+            } else {
+                print("   ❌ Failed: \(urlString)")
+            }
+        }
+
+        return false
+    }
+    
+    private func tryUniversalLink() async -> Bool {
+        // Try universal links for Ready/Argent (opens the app if associated domains configured)
+        let urls = [
+            // Ready links
+            "https://ready.co/app/connect",
+            "https://ready.co/connect",
+            "https://ready.co",
+            // Argent links (legacy)
+            "https://argent.link/app",
+            "https://argent.link/app/wc"
+        ]
         
-        // Try Ready's custom scheme
-        let schemes = ["ready://connect", "ready://", "readywallet://connect"]
-        
-        for scheme in schemes {
-            guard let url = URL(string: scheme) else { continue }
+        for urlString in urls {
+            guard let url = URL(string: urlString) else { continue }
             
             let success = await withCheckedContinuation { continuation in
                 DispatchQueue.main.async {
-                    if UIApplication.shared.canOpenURL(url) {
-                        print("✅ Opening Ready Wallet via scheme: \(scheme)")
-                        UIApplication.shared.open(url, options: [:]) { result in
-                            continuation.resume(returning: result)
-                        }
-                    } else {
-                        continuation.resume(returning: false)
+                    UIApplication.shared.open(url, options: [.universalLinksOnly: true]) { result in
+                        continuation.resume(returning: result)
                     }
                 }
             }
             
             if success {
-                print("✅ Successfully opened with scheme: \(scheme)")
+                print("   ✅ Opened with universal link: \(urlString)")
                 return true
             }
         }
         
-        print("⚠️ Direct app connection failed")
         return false
     }
     
-    private func tryAppStoreConnection() async -> Bool {
-        print("🏪 Attempting App Store connection...")
-        
-        // Use Ready Wallet's actual App Store URL
+    private func tryAppStoreLink() async -> Bool {
+        // App Store links will open the app if it's installed
         guard let url = URL(string: "https://apps.apple.com/app/ready-wallet/id6504062205") else {
-            print("❌ Invalid App Store URL")
             return false
         }
         
         return await withCheckedContinuation { continuation in
             DispatchQueue.main.async {
-                print("📲 Opening App Store for Ready Wallet")
-                UIApplication.shared.open(url, options: [:]) { success in
-                    print("App Store result: \(success)")
-                    continuation.resume(returning: success)
+                UIApplication.shared.open(url, options: [:]) { result in
+                    continuation.resume(returning: result)
                 }
             }
         }
     }
     
     private func showManualConnectionInstructions() async {
-        print("📋 Showing manual connection instructions")
-        
         let message = """
-        To connect Ready Wallet:
+        Ready Wallet Manual Connection:
         
-        1. Make sure Ready Wallet is installed
-        2. Open Ready Wallet manually
-        3. Navigate to DApp connections
-        4. Scan the QR code or enter connection details
-        5. Approve the connection
+        1. Open Ready Wallet app manually
+        2. Ensure Sepolia network is selected
+        3. Go to Settings or DApp connections
+        4. Approve the connection request
+        5. Return to this app
+        
+        Or tap 'I Connected Manually' below
         """
         
         await MainActor.run {
-            // You might want to show this in a proper alert or view
             errorMessage = message
         }
     }
     
-    private func simulateConnection() async -> Bool {
-        print("🎭 Simulating connection for demo...")
+    private func waitForConnection(timeout: TimeInterval) async -> Bool {
+        print("⏳ Waiting for connection callback (timeout: \(timeout)s)...")
         
-        // Simulate connection delay
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
+        return await withCheckedContinuation { continuation in
+            connectionContinuation = continuation
+            
+            connectionTimer = Timer.scheduledTimer(withTimeInterval: timeout, repeats: false) { _ in
+                print("⏰ Connection timeout")
+                Task { @MainActor in
+                    if !self.isConnected {
+                        self.connectionStatus = .failed
+                        self.errorMessage = "Connection timeout. Try manual connection."
+                        self.isConnecting = false
+                    }
+                    
+                    self.connectionContinuation?.resume(returning: false)
+                    self.connectionContinuation = nil
+                    self.connectionTimer = nil
+                }
+            }
+        }
+    }
+    
+    // MARK: - Manual Connection Support
+    
+    public func completeManualConnection(address: String, publicKey: String = "", name: String = "Ready Wallet") {
+        print("✅ Completing manual connection")
+        print("   Address: \(address)")
         
-        await MainActor.run {
-            isConnected = true
-            connectedAddress = "0x1234567890abcdef1234567890abcdef12345678"
-            publicKey = "0xpublic_key_example"
-            walletName = "Ready Wallet"
-            errorMessage = ""
+        guard !address.isEmpty else {
+            print("❌ Empty address provided")
+            return
         }
         
-        print("✅ Simulated connection successful")
-        return true
+        DispatchQueue.main.async {
+            self.connectedAddress = address
+            self.publicKey = publicKey
+            self.walletName = name
+            self.isConnected = true
+            self.isConnecting = false
+            self.connectionStatus = .connected
+            self.errorMessage = ""
+            
+            self.connectionContinuation?.resume(returning: true)
+            self.connectionContinuation = nil
+            self.connectionTimer?.invalidate()
+            self.connectionTimer = nil
+        }
+    }
+    
+    public func cancelConnection() {
+        print("🚫 Connection cancelled by user")
+        
+        DispatchQueue.main.async {
+            self.isConnecting = false
+            self.connectionStatus = .disconnected
+            self.errorMessage = ""
+            
+            self.connectionContinuation?.resume(returning: false)
+            self.connectionContinuation = nil
+            self.connectionTimer?.invalidate()
+            self.connectionTimer = nil
+        }
     }
     
     // MARK: - Disconnect
@@ -266,182 +362,158 @@ public class ReadyWalletManager: ObservableObject {
         publicKey = ""
         walletName = ""
         errorMessage = ""
+        connectionStatus = .disconnected
         
         print("✅ Disconnected successfully")
+    }
+    
+    // MARK: - Manual import from private key
+    public func importFromPrivateKey(address: String?, publicKey: String?, privateKey: String) {
+        // This manager is UI state only; actual Starknet operations are on StarknetManager
+        // We mark as connected to indicate the app has a wallet imported
+        DispatchQueue.main.async {
+            self.connectedAddress = address ?? self.connectedAddress
+            self.publicKey = publicKey ?? self.publicKey
+            self.walletName = self.walletName.isEmpty ? "Imported Wallet" : self.walletName
+            self.isConnected = true
+            self.connectionStatus = .connected
+            self.errorMessage = ""
+        }
+    }
+    
+    // MARK: - App Store helper
+    /// Open the Ready Wallet App Store page (will foreground the app if installed)
+    public func openAppStore() {
+        guard let url = URL(string: "https://apps.apple.com/app/ready-wallet/id6504062205") else { return }
+        DispatchQueue.main.async {
+            UIApplication.shared.open(url)
+        }
+    }
+    
+    // MARK: - Debug Methods
+    
+    public func debugCheckSchemes() {
+        print("\n🔍 DEBUG: Checking all possible schemes for Ready Wallet:")
+        print("   App is installed as: com.ready.wallet\n")
+        
+        for scheme in possibleSchemes {
+            guard let url = URL(string: "\(scheme)://") else { continue }
+            let canOpen = UIApplication.shared.canOpenURL(url)
+            print("   \(canOpen ? "✅" : "❌") \(scheme)://")
+        }
+        
+        print("\n💡 Note: Even if all show ❌, the app might still open via universal links or App Store links")
+        print("")
+    }
+    
+    public func testAllOpenMethods() async {
+        print("\n🧪 Testing all methods to open Ready Wallet...\n")
+        
+        print("1️⃣ Testing URL schemes:")
+        for scheme in possibleSchemes {
+            _ = await tryOpenWithScheme(scheme, network: "sepolia")
+            try? await Task.sleep(nanoseconds: 1_000_000_000) // Wait 1 second between attempts
+        }
+        
+        print("\n2️⃣ Testing universal links:")
+        _ = await tryUniversalLink()
+        try? await Task.sleep(nanoseconds: 1_000_000_000)
+        
+        print("\n3️⃣ Testing App Store link:")
+        _ = await tryAppStoreLink()
+        
+        print("\n✅ Test complete. Check console for results.\n")
     }
     
     // MARK: - Transaction Methods
     
     public func signTransaction(_ transaction: [String: Any]) async throws -> String {
-        print("✍️ Signing transaction with Ready Wallet...")
-        
         guard isConnected else {
-            throw WalletError.notConnected
+            throw ReadyWalletError.notConnected
         }
         
-        // In a real implementation, this would communicate with Ready Wallet
-        // For now, return a mock signature
-        try await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
-        
-        let mockSignature = "0xsignature_mock_\(Date().timeIntervalSince1970)"
-        print("✅ Transaction signed: \(mockSignature)")
-        
-        return mockSignature
+        // Mock implementation
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+        return "0xsignature_mock_\(Date().timeIntervalSince1970)"
     }
     
     public func sendTransaction(_ transaction: [String: Any]) async throws -> String {
-        print("📤 Sending transaction via Ready Wallet...")
-        
         guard isConnected else {
-            throw WalletError.notConnected
+            throw ReadyWalletError.notConnected
         }
         
-        // Sign first
-        let signature = try await signTransaction(transaction)
-        print("📝 Using signature: \(signature)")
+        _ = try await signTransaction(transaction)
+        try await Task.sleep(nanoseconds: 1_500_000_000)
         
-        // Simulate sending
-        try await Task.sleep(nanoseconds: 1_500_000_000) // 1.5 seconds
-        
-        let mockTxHash = "0x\(UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased())"
-        print("✅ Transaction sent: \(mockTxHash)")
-        
-        return mockTxHash
-    }
-    
-    // MARK: - Wallet Display Methods
-    
-    public func getWalletDisplayName() -> String {
-        return walletName.isEmpty ? "Ready Wallet" : walletName
-    }
-    
-    public func openAppStore() {
-        Task {
-            await tryAppStoreConnection()
-        }
+        return "0x\(UUID().uuidString.replacingOccurrences(of: "-", with: "").lowercased())"
     }
     
     // MARK: - URL Callback Handling
     
     public func handleReadyCallback(url: URL) {
-        print("🔗 ReadyWalletManager handling callback URL: \(url.absoluteString)")
+        print("🔗 Handling callback: \(url.absoluteString)")
         
-        // Parse the URL for wallet response data
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
             print("❌ Invalid URL components")
             return
         }
         
-        // Handle different callback types
-        if let host = components.host {
-            switch host {
-            case "connect":
-                handleConnectCallback(components: components)
-            case "sign":
-                handleSignCallback(components: components)
-            case "send":
-                handleSendCallback(components: components)
-            default:
-                print("⚠️ Unknown callback type: \(host)")
-            }
-        }
+        handleConnectCallback(components: components)
     }
     
     private func handleConnectCallback(components: URLComponents) {
         guard let queryItems = components.queryItems else {
-            print("❌ No query items in connect callback")
+            print("❌ No query items")
             return
         }
         
-        var address = ""
-        var publicKey = ""
-        var name = ""
+        print("📝 Query items: \(queryItems.map { "\($0.name)=\($0.value ?? "nil")" }.joined(separator: ", "))")
+        
+    var address = ""
+    var publicKey = ""
+    var name = ""
+    var error = ""
         
         for item in queryItems {
-            switch item.name {
-            case "address":
+            switch item.name.lowercased() {
+            case "address", "account", "wallet_address":
                 address = item.value ?? ""
-            case "publicKey":
+            case "publickey", "public_key", "pubkey":
                 publicKey = item.value ?? ""
-            case "name":
+            case "name", "wallet_name":
                 name = item.value ?? ""
+            case "network", "chain":
+                // Network value available but not used
+                break
+            case "error", "error_message":
+                error = item.value ?? ""
             default:
                 break
             }
         }
         
-        if !address.isEmpty {
-            print("✅ Connection successful!")
+        if !error.isEmpty {
+            print("❌ Callback error: \(error)")
             DispatchQueue.main.async {
-                self.connectedAddress = address
-                self.publicKey = publicKey
-                self.walletName = name.isEmpty ? "Ready Wallet" : name
-                self.isConnected = true
+                self.errorMessage = "Error: \(error)"
+                self.connectionStatus = .failed
                 self.isConnecting = false
-                self.errorMessage = ""
-                
-                // Resume any waiting connection
-                self.connectionContinuation?.resume(returning: true)
-                self.connectionContinuation = nil
-                self.connectionTimer?.invalidate()
-                self.connectionTimer = nil
-            }
-        } else {
-            print("❌ Connection failed - no address provided")
-            DispatchQueue.main.async {
-                self.errorMessage = "Connection failed"
-                self.isConnecting = false
-                
-                // Resume any waiting connection
                 self.connectionContinuation?.resume(returning: false)
                 self.connectionContinuation = nil
                 self.connectionTimer?.invalidate()
-                self.connectionTimer = nil
             }
+        } else if !address.isEmpty {
+            print("✅ Connection successful!")
+            completeManualConnection(address: address, publicKey: publicKey, name: name.isEmpty ? "Ready Wallet" : name)
         }
     }
     
-    private func handleSignCallback(components: URLComponents) {
-        print("🖊️ Handling sign callback")
-        // Handle signature response
-        // This would be implemented based on the actual Ready Wallet callback format
+    // MARK: - Display Methods
+    
+    public func getWalletDisplayName() -> String {
+        return walletName.isEmpty ? "Ready Wallet" : walletName
     }
     
-    private func handleSendCallback(components: URLComponents) {
-        print("📤 Handling send callback")
-        // Handle transaction response
-        // This would be implemented based on the actual Ready Wallet callback format
-    }
-}
-
-// MARK: - Wallet Errors
-
-public enum WalletError: LocalizedError {
-    case notInstalled
-    case notConnected
-    case connectionFailed
-    case transactionFailed
-    case userCancelled
-    
-    public var errorDescription: String? {
-        switch self {
-        case .notInstalled:
-            return "Ready Wallet is not installed"
-        case .notConnected:
-            return "Wallet is not connected"
-        case .connectionFailed:
-            return "Failed to connect to wallet"
-        case .transactionFailed:
-            return "Transaction failed"
-        case .userCancelled:
-            return "User cancelled the operation"
-        }
-    }
-}
-
-// MARK: - Extensions
-
-extension ReadyWalletManager {
     public var connectionStatusString: String {
         switch connectionStatus {
         case .disconnected:
@@ -462,5 +534,30 @@ extension ReadyWalletManager {
             return "\(address.prefix(6))...\(address.suffix(4))"
         }
         return address
+    }
+}
+
+// MARK: - Errors
+
+public enum ReadyWalletError: LocalizedError {
+    case notInstalled
+    case notConnected
+    case connectionFailed
+    case transactionFailed
+    case userCancelled
+    
+    public var errorDescription: String? {
+        switch self {
+        case .notInstalled:
+            return "Ready Wallet is not installed"
+        case .notConnected:
+            return "Wallet is not connected"
+        case .connectionFailed:
+            return "Failed to connect to wallet"
+        case .transactionFailed:
+            return "Transaction failed"
+        case .userCancelled:
+            return "User cancelled the operation"
+        }
     }
 }

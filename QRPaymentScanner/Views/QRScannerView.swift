@@ -15,6 +15,13 @@ struct QRScannerView: UIViewControllerRepresentable {
     func makeUIViewController(context: Context) -> UINavigationController {
         let storyboard = UIStoryboard(name: "Main", bundle: nil)
         let scannerVC = storyboard.instantiateViewController(withIdentifier: "QRScannerViewController") as! QRScannerViewController
+        // Wire callback to deliver scan result back to SwiftUI
+        scannerVC.onScanComplete = { text in
+            DispatchQueue.main.async {
+                onScanComplete?(text)
+                isPresented = false
+            }
+        }
         
         // Create a navigation controller to wrap the scanner
         let navController = UINavigationController(rootViewController: scannerVC)

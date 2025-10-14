@@ -8,274 +8,43 @@
 import SwiftUI
 
 public struct StarknetConnectView: View {
-    @StateObject private var starknet = StarknetManager.shared
-    @StateObject private var readyWallet = ReadyWalletManager.shared
-    @State private var showingManualEntry = false
-    @State private var address = ""
-    @State private var privateKey = ""
-    @State private var publicKey = ""
     @Environment(\.dismiss) private var dismiss
-    
     public init() {}
-    
+
     public var body: some View {
-        VStack(spacing: 24) {
-            // Header
+        VStack(spacing: 16) {
             VStack(spacing: 8) {
                 Image(systemName: "bolt.circle.fill")
                     .font(.system(size: 60))
                     .foregroundColor(Color(red: 0.8, green: 0.3, blue: 0.3))
-                
+
                 Text("Connect to Starknet")
                     .font(.system(size: 24, weight: .bold))
-                
-                Text("Connect your Starknet wallet to access the vault")
+
+                Text("Enter your account keys or scan a QR to connect.")
                     .font(.system(size: 16))
                     .foregroundColor(.gray)
                     .multilineTextAlignment(.center)
             }
             .padding(.top, 40)
-            
-            // Connection Status
-            if readyWallet.isConnected {
-                VStack(spacing: 12) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 40))
-                        .foregroundColor(.green)
-                    
-                    Text("Connected to Ready Wallet")
-                        .font(.system(size: 18, weight: .medium))
-                    
-                    Text(readyWallet.connectedAddress)
-                        .font(.system(size: 12, design: .monospaced))
-                        .foregroundColor(.gray)
-                        .lineLimit(1)
-                        .truncationMode(.middle)
+
+            ManualWalletEntryView()
+
+            Button(action: { dismiss() }) {
+                HStack {
+                    Image(systemName: "xmark.circle")
+                    Text("Close")
                 }
+                .frame(maxWidth: .infinity)
                 .padding()
-                .background(Color.green.opacity(0.1))
+                .background(Color.gray.opacity(0.1))
                 .cornerRadius(12)
-                .padding(.horizontal, 20)
             }
-            
-            // Wallet Connection Options
-            if !readyWallet.isConnected {
-                VStack(spacing: 16) {
-                    // Argent X Wallet Connection (Primary Option)
-                    VStack(spacing: 12) {
-                        Text("Recommended")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.orange)
-                        
-                        Button(action: connectToReadyWallet) {
-                            HStack(spacing: 12) {
-                                if readyWallet.isConnecting {
-                                    ProgressView()
-                                        .scaleEffect(0.8)
-                                } else {
-                                    Image(systemName: "wallet.pass.fill")
-                                        .font(.system(size: 20))
-                                }
-                                
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text("Connect with \(readyWallet.getWalletDisplayName())")
-                                        .font(.system(size: 16, weight: .medium))
-                                    if readyWallet.isReadyWalletInstalled() {
-                                        Text("Open your \(readyWallet.getWalletDisplayName())")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.gray)
-                                    } else {
-                                        Text("Install Starknet Wallet first")
-                                            .font(.system(size: 12))
-                                            .foregroundColor(.orange)
-                                    }
-                                }
-                                
-                                Spacer()
-                                
-                                if readyWallet.isReadyWalletInstalled() {
-                                    Image(systemName: "arrow.right.circle")
-                                        .font(.system(size: 16))
-                                } else {
-                                    Text("Install")
-                                        .font(.system(size: 12, weight: .medium))
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(Color.orange.opacity(0.2))
-                                        .cornerRadius(8)
-                                }
-                            }
-                            .padding()
-                            .frame(maxWidth: .infinity, alignment: .leading)
-                            .background(Color(red: 0.8, green: 0.3, blue: 0.3).opacity(0.1))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(Color(red: 0.8, green: 0.3, blue: 0.3), lineWidth: 1)
-                            )
-                            .cornerRadius(12)
-                        }
-                        .disabled(readyWallet.isConnecting)
-                        .foregroundColor(.primary)
-                        
-                        // Show error message if any
-                        if !readyWallet.errorMessage.isEmpty {
-                            VStack(spacing: 8) {
-                                HStack {
-                                    Image(systemName: "exclamationmark.triangle.fill")
-                                        .foregroundColor(.orange)
-                                    Text(readyWallet.errorMessage)
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.orange)
-                                    Spacer()
-                                }
-                                
-                                // Show suggestion based on error type
-                                if readyWallet.errorMessage.contains("not installed") {
-                                    Button("Install Ready Wallet") {
-                                        readyWallet.openAppStore()
-                                    }
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.blue)
-                                } else {
-                                    Button("Try Manual Entry Instead") {
-                                        showingManualEntry = true
-                                    }
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.blue)
-                                }
-                            }
-                            .padding(.horizontal, 12)
-                            .padding(.vertical, 8)
-                            .background(Color.orange.opacity(0.1))
-                            .cornerRadius(8)
-                        }
-                    }
-                    
-                    // Divider
-                    HStack {
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 1)
-                        Text("or")
-                            .font(.system(size: 12))
-                            .foregroundColor(.gray)
-                            .padding(.horizontal, 8)
-                        Rectangle()
-                            .fill(Color.gray.opacity(0.3))
-                            .frame(height: 1)
-                    }
-                    
-                    // Manual Entry Option
-                    Button(action: {
-                        showingManualEntry = true
-                    }) {
-                        HStack {
-                            Image(systemName: "key.fill")
-                            Text("Manual Key Entry")
-                                .font(.system(size: 14))
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12))
-                        }
-                        .padding()
-                        .frame(maxWidth: .infinity)
-                        .background(Color.gray.opacity(0.1))
-                        .cornerRadius(10)
-                    }
-                    .foregroundColor(.gray)
-                }
-                .padding(.horizontal, 20)
-            }
-            
-            // Error Message
-            if !readyWallet.errorMessage.isEmpty {
-                VStack(spacing: 8) {
-                    HStack {
-                        Image(systemName: "exclamationmark.triangle.fill")
-                            .foregroundColor(.orange)
-                        Text(readyWallet.errorMessage)
-                            .font(.system(size: 14))
-                            .foregroundColor(.primary)
-                    }
-                    
-                    if !readyWallet.isReadyWalletInstalled() {
-                        Button("Install Ready Wallet") {
-                            readyWallet.openAppStore()
-                        }
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(.blue)
-                    }
-                }
-                .padding()
-                .background(Color.orange.opacity(0.1))
-                .cornerRadius(12)
-                .padding(.horizontal, 20)
-            }
-            
-            Spacer()
-            
-            // Action Buttons
-            VStack(spacing: 12) {
-                if readyWallet.isConnected {
-                    // Disconnect Button
-                    Button(action: {
-                        readyWallet.disconnect()
-                    }) {
-                        HStack {
-                            Image(systemName: "link.badge.minus")
-                            Text("Disconnect Wallet")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.red.opacity(0.1))
-                        .foregroundColor(.red)
-                        .cornerRadius(12)
-                    }
-                    
-                    // Done Button
-                    Button(action: {
-                        dismiss()
-                    }) {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                            Text("Done")
-                        }
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(Color.green)
-                        .foregroundColor(.white)
-                        .cornerRadius(12)
-                    }
-                } else {
-                    // Cancel Button
-                    Button("Cancel") {
-                        dismiss()
-                    }
-                    .foregroundColor(.gray)
-                }
-            }
+            .foregroundColor(.primary)
             .padding(.horizontal, 20)
             .padding(.bottom, 20)
         }
         .background(Color(.systemBackground))
-        .sheet(isPresented: $showingManualEntry) {
-            ManualWalletEntryView()
-        }
-    }
-    
-    private func connectToReadyWallet() {
-        // If Ready Wallet is not installed, redirect to App Store
-        if !readyWallet.isReadyWalletInstalled() {
-            readyWallet.openAppStore()
-            return
-        }
-        
-        Task {
-            let success = await readyWallet.connectWallet()
-            if success {
-                dismiss()
-            }
-        }
     }
 }
 
@@ -285,6 +54,10 @@ struct ManualWalletEntryView: View {
     @State private var address = ""
     @State private var privateKey = ""
     @State private var publicKey = ""
+    @State private var showAddressScanner = false
+    @State private var showPrivateKeyScanner = false
+    @State private var showPublicKeyScanner = false
+    @State private var showBraavosConnect = false
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
@@ -300,43 +73,133 @@ struct ManualWalletEntryView: View {
                     .multilineTextAlignment(.center)
                 
                 VStack(spacing: 16) {
+                    // Address Field with Scan Button
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Wallet Address")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.gray)
+                        HStack {
+                            Text("Wallet Address")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.gray)
+                            Spacer()
+                            Button(action: { showAddressScanner = true }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "qrcode.viewfinder")
+                                    Text("Scan")
+                                }
+                                .font(.caption)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.blue.opacity(0.1))
+                                .foregroundColor(.blue)
+                                .cornerRadius(8)
+                            }
+                        }
                         
                         TextField("0x...", text: $address)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .font(.system(size: 14, design: .monospaced))
+                        
+                        if !address.isEmpty {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text("Address loaded")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            }
+                        }
                     }
                     
+                    // Private Key Field with Scan Button
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Private Key")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.gray)
+                        HStack {
+                            Text("Private Key")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.gray)
+                            Spacer()
+                            Button(action: { showPrivateKeyScanner = true }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "qrcode.viewfinder")
+                                    Text("Scan")
+                                }
+                                .font(.caption)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.orange.opacity(0.1))
+                                .foregroundColor(.orange)
+                                .cornerRadius(8)
+                            }
+                        }
                         
                         SecureField("0x...", text: $privateKey)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .font(.system(size: 14, design: .monospaced))
+                        
+                        if !privateKey.isEmpty {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text("Private key loaded")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            }
+                        }
                     }
                     
+                    // Public Key Field with Scan Button
                     VStack(alignment: .leading, spacing: 8) {
-                        Text("Public Key")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.gray)
+                        HStack {
+                            Text("Public Key")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.gray)
+                            Spacer()
+                            Button(action: { showPublicKeyScanner = true }) {
+                                HStack(spacing: 4) {
+                                    Image(systemName: "qrcode.viewfinder")
+                                    Text("Scan")
+                                }
+                                .font(.caption)
+                                .padding(.horizontal, 12)
+                                .padding(.vertical, 6)
+                                .background(Color.green.opacity(0.1))
+                                .foregroundColor(.green)
+                                .cornerRadius(8)
+                            }
+                        }
                         
                         TextField("0x...", text: $publicKey)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
                             .font(.system(size: 14, design: .monospaced))
+                        
+                        if !publicKey.isEmpty {
+                            HStack {
+                                Image(systemName: "checkmark.circle.fill")
+                                    .foregroundColor(.green)
+                                Text("Public key loaded")
+                                    .font(.caption)
+                                    .foregroundColor(.green)
+                            }
+                        }
                     }
                 }
                 .padding(.horizontal)
                 
-                // Quick Connect Buttons
+                // Wallet Connection Buttons
                 VStack(spacing: 12) {
-                    Text("Quick Fill")
+                    Text("Connect via Wallet")
                         .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.gray)
+                    
+                    Button(action: { showBraavosConnect = true }) {
+                        HStack {
+                            Image(systemName: "wallet.pass.fill")
+                            Text("Connect to Braavos (WalletConnect)")
+                        }
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.orange)
+                        .foregroundColor(.white)
+                        .cornerRadius(12)
+                    }
                     
                     Button(action: {
                         address = "0x0736bf796e70dad68a103682720dafb090f50065821971b33cbeeb3e3ff5af9f"
@@ -349,11 +212,88 @@ struct ManualWalletEntryView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding()
-                        .background(Color.blue.opacity(0.1))
-                        .foregroundColor(.blue)
+                        .background(Color.purple.opacity(0.1))
+                        .foregroundColor(.purple)
                         .cornerRadius(12)
                     }
+                    
+                    // Instructions for Ready wallet users
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack {
+                            Image(systemName: "info.circle.fill")
+                                .foregroundColor(.blue)
+                            Text("Ready Wallet Instructions:")
+                                .font(.caption)
+                                .fontWeight(.semibold)
+                        }
+                        Text("1️⃣ Tap 'Scan' next to Address → scan your Address QR")
+                            .font(.caption)
+                        Text("2️⃣ Tap 'Scan' next to Private Key → scan your Private Key QR")
+                            .font(.caption)
+                        Text("3️⃣ Tap 'Scan' next to Public Key → scan your Public Key QR")
+                            .font(.caption)
+                        Text("4️⃣ Tap 'Connect Wallet' when all 3 are filled ✅")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.green)
+                    }
+                    .padding(12)
+                    .background(Color.blue.opacity(0.05))
+                    .cornerRadius(8)
                 }
+                .padding(.horizontal)
+                
+
+                PrivateKeyScannerView(isPresented: $showAddressScanner) { text in
+                    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    print("� Scanned ADDRESS: \(trimmed)")
+                    address = trimmed
+                }
+                .sheet(isPresented: $showPrivateKeyScanner) {
+                    PrivateKeyScannerView(isPresented: $showPrivateKeyScanner) { text in
+                        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        print("🔑 Scanned PRIVATE KEY: \(trimmed.prefix(10))...")
+                        privateKey = trimmed
+                    }
+                }
+                .sheet(isPresented: $showPublicKeyScanner) {
+                    PrivateKeyScannerView(isPresented: $showPublicKeyScanner) { text in
+                        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                        print("� Scanned PUBLIC KEY: \(trimmed.prefix(10))...")
+                        publicKey = trimmed
+                    }
+                }
+                
+                // Status Summary
+                VStack(spacing: 8) {
+                    HStack {
+                        Image(systemName: "checklist")
+                            .foregroundColor(.blue)
+                        Text("Scan Progress")
+                            .font(.system(size: 14, weight: .semibold))
+                        Spacer()
+                        Text("\(scanProgress)/3")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(isFormValid ? .green : .orange)
+                    }
+                    
+                    ProgressView(value: Double(scanProgress), total: 3.0)
+                        .tint(isFormValid ? .green : .blue)
+                    
+                    if !isFormValid {
+                        Text("Scan all 3 QR codes to enable connection")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    } else {
+                        Text("✅ All fields ready! Tap Connect below")
+                            .font(.caption)
+                            .fontWeight(.semibold)
+                            .foregroundColor(.green)
+                    }
+                }
+                .padding()
+                .background(Color.gray.opacity(0.05))
+                .cornerRadius(12)
                 .padding(.horizontal)
                 
                 Spacer()
@@ -365,14 +305,14 @@ struct ManualWalletEntryView: View {
                             ProgressView()
                                 .scaleEffect(0.8)
                         } else {
-                            Image(systemName: "link.circle.fill")
+                            Image(systemName: isFormValid ? "checkmark.circle.fill" : "lock.circle.fill")
                         }
                         
-                        Text(starknet.isLoading ? "Connecting..." : "Connect Wallet")
+                        Text(starknet.isLoading ? "Connecting..." : (isFormValid ? "Connect Wallet" : "Scan All 3 QR Codes First"))
                     }
                     .frame(maxWidth: .infinity)
                     .padding()
-                    .background(isFormValid ? Color(red: 0.8, green: 0.3, blue: 0.3) : Color.gray)
+                    .background(isFormValid ? Color(red: 0.8, green: 0.3, blue: 0.3) : Color.gray.opacity(0.3))
                     .foregroundColor(.white)
                     .cornerRadius(12)
                 }
@@ -390,20 +330,64 @@ struct ManualWalletEntryView: View {
             .navigationBarItems(
                 leading: Button("Cancel") { dismiss() }
             )
+            .sheet(isPresented: $showAddressScanner) {
+                PrivateKeyScannerView(isPresented: $showAddressScanner) { text in
+                    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    print("📍 Scanned ADDRESS: \(trimmed)")
+                    address = trimmed
+                }
+            }
+            .sheet(isPresented: $showPrivateKeyScanner) {
+                PrivateKeyScannerView(isPresented: $showPrivateKeyScanner) { text in
+                    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    print("🔑 Scanned PRIVATE KEY: \(trimmed.prefix(10))...")
+                    privateKey = trimmed
+                }
+            }
+            .sheet(isPresented: $showPublicKeyScanner) {
+                PrivateKeyScannerView(isPresented: $showPublicKeyScanner) { text in
+                    let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+                    print("🔓 Scanned PUBLIC KEY: \(trimmed.prefix(10))...")
+                    publicKey = trimmed
+                }
+            }
+            .sheet(isPresented: $showBraavosConnect) {
+                BraavosConnectView()
+            }
         }
     }
     
     private var isFormValid: Bool {
-        !address.isEmpty && !privateKey.isEmpty && !publicKey.isEmpty &&
-        address.hasPrefix("0x") && privateKey.hasPrefix("0x") && publicKey.hasPrefix("0x")
+        // Require all three fields to be filled
+        return !address.isEmpty && address.hasPrefix("0x") &&
+               !privateKey.isEmpty && privateKey.hasPrefix("0x") &&
+               !publicKey.isEmpty && publicKey.hasPrefix("0x")
+    }
+    
+    private var scanProgress: Int {
+        var count = 0
+        if !address.isEmpty && address.hasPrefix("0x") { count += 1 }
+        if !privateKey.isEmpty && privateKey.hasPrefix("0x") { count += 1 }
+        if !publicKey.isEmpty && publicKey.hasPrefix("0x") { count += 1 }
+        return count
     }
     
     private func connectManualWallet() {
+        print("\n🔌 ========== MANUAL WALLET CONNECTION ==========")
+        print("📍 Address: \(address)")
+        print("🔑 Private Key: \(privateKey.prefix(10))...\(privateKey.suffix(4))")
+        print("🔓 Public Key: \(publicKey.prefix(10))...\(publicKey.suffix(4))")
+        print("✅ All 3 fields present - proceeding with full connection")
+        
+        // Always use full connect since all fields are required
         starknet.connectWallet(
             address: address,
             privateKey: privateKey,
             publicKey: publicKey
         )
+        
+        ReadyWalletManager.shared.importFromPrivateKey(address: address, publicKey: publicKey, privateKey: privateKey)
+        print("🔌 ========== CONNECTION COMPLETE ==========\n")
         dismiss()
     }
 }

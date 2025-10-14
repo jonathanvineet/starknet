@@ -336,7 +336,7 @@ struct HomeView: View {
             ProfileView()
         }
         .sheet(isPresented: $showStarknetConnect) {
-            StarknetConnectView()
+            WalletConnectionView()
         }
         .sheet(isPresented: $showDepositView) {
             VaultActionView(actionType: .deposit)

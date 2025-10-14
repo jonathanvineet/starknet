@@ -9,7 +9,7 @@ class RealStarknetManager: ObservableObject {
     struct ContractConfig {
         static let vaultContractAddress = "0x029961c5af1520f4a4ad57dccc66370b92ff7a0c47fbf00764e354c17156d7db"
         static let strkTokenAddress = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
-        static let rpcUrl = "https://starknet-sepolia.g.alchemy.com/starknet/version/rpc/v0_6"
+    static let rpcUrl = "https://starknet-sepolia.public.blastapi.io/rpc/v0_9"
         static let networkId = "sepolia"
     }
     
