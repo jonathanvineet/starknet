@@ -6,27 +6,20 @@
 import UIKit
 import Foundation
 import WalletConnectSign
-import ReownAppKit
 import WalletConnectNetworking
-import WalletConnectRelay
-import WalletConnectSigner
 import Combine
-import CryptoKit
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
-        
-        // CRITICAL: Configure Reown AppKit FIRST before any other initialization
-        configureReownAppKit()
+
+        // Initialize SimpleWalletConnectManager (this will configure WalletConnect)
+        _ = SimpleWalletConnectManager.shared
 
         // Configure ChippiPay API keys
         configureChippiPay()
-        
-        // Configure WalletConnect
-        configureWalletConnect()
 
         return true
     }
