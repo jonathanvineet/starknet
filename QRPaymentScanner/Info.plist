@@ -18,10 +18,12 @@
 	</array>
 	<key>LSApplicationQueriesSchemes</key>
 	<array>
+		<!-- Starknet Wallets -->
 		<string>argent</string>
 		<string>argentx</string>
 		<string>argentmobile</string>
 		<string>readywallet</string>
+		<string>ready-wallet</string>
 		<string>ready</string>
 		<string>braavos</string>
 		<string>wc</string>

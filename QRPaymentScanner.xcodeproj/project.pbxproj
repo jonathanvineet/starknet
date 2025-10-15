@@ -25,8 +25,17 @@
 		1234567890ABCDE5 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE6 /* Main.storyboard */; };
 		1234567890ABCDE7 /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE8 /* LaunchScreen.storyboard */; };
 		1234567890ABCDEF /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1234567890ABCDE0 /* AppDelegate.swift */; };
-
-
+		224A74452E9E7389006B533E /* ReownAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74442E9E7389006B533E /* ReownAppKit */; };
+		224A74472E9E7389006B533E /* ReownAppKitUI in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74462E9E7389006B533E /* ReownAppKitUI */; };
+		224A74492E9E7389006B533E /* ReownRouter in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74482E9E7389006B533E /* ReownRouter */; };
+		224A744B2E9E7389006B533E /* ReownWalletKit in Frameworks */ = {isa = PBXBuildFile; productRef = 224A744A2E9E7389006B533E /* ReownWalletKit */; };
+		224A744D2E9E7389006B533E /* WalletConnect in Frameworks */ = {isa = PBXBuildFile; productRef = 224A744C2E9E7389006B533E /* WalletConnect */; };
+		224A744F2E9E7389006B533E /* WalletConnectIdentity in Frameworks */ = {isa = PBXBuildFile; productRef = 224A744E2E9E7389006B533E /* WalletConnectIdentity */; };
+		224A74512E9E7389006B533E /* WalletConnectNetworking in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74502E9E7389006B533E /* WalletConnectNetworking */; };
+		224A74532E9E7389006B533E /* WalletConnectNotify in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74522E9E7389006B533E /* WalletConnectNotify */; };
+		224A74552E9E7389006B533E /* WalletConnectPairing in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74542E9E7389006B533E /* WalletConnectPairing */; };
+		224A74572E9E7389006B533E /* WalletConnectPush in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74562E9E7389006B533E /* WalletConnectPush */; };
+		224A74592E9E7389006B533E /* WalletConnectVerify in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74582E9E7389006B533E /* WalletConnectVerify */; };
 		5ACFB3762CB922A400B3E7F9 /* StarknetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */; };
 		5ACFB3772CB922A400B3E7F9 /* ChippiPayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */; };
 		5ACFB3778CB922A400B3E7F9 /* ReadyWalletManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3778CB922A400B3E7F8 /* ReadyWalletManager.swift */; };
@@ -36,6 +45,12 @@
 		5ACFB377D2CB922A400B3E7F9 /* ServicePurchaseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB377D2CB922A400B3E7F8 /* ServicePurchaseView.swift */; };
 		5ACFB3782CB922A400B3E7F9 /* StarknetConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3782CB922A400B3E7F8 /* StarknetConnectView.swift */; };
 		5ACFB3792CB922A400B3E7F9 /* VaultActionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3792CB922A400B3E7F8 /* VaultActionView.swift */; };
+		5ACFB37A2CB922A400B3E7F9 /* BraavosConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB37A2CB922A400B3E7F8 /* BraavosConnectView.swift */; };
+		5ACFB37B2CB922A400B3E7F9 /* BraavosConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB37B2CB922A400B3E7F8 /* BraavosConnectionManager.swift */; };
+		5ACFB37E2CB922A400B3E7F9 /* WalletConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB37E2CB922A400B3E7F8 /* WalletConnectionView.swift */; };
+		5ACFB37D2CB922A400B3E7F9 /* AppKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5ACFB37D2CB922A400B3E7F8 /* AppKit */; };
+		9F8D7C6B5A4E001100110002 /* PrivateKeyScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8D7C6B5A4E001100110001 /* PrivateKeyScannerView.swift */; };
+		9F8D7C6B5A4E001100110004 /* PrivateKeyScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8D7C6B5A4E001100110003 /* PrivateKeyScannerViewController.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -63,6 +78,11 @@
 		5ACFB377D2CB922A400B3E7F8 /* ServicePurchaseView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServicePurchaseView.swift; sourceTree = "<group>"; };
 		5ACFB3782CB922A400B3E7F8 /* StarknetConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarknetConnectView.swift; sourceTree = "<group>"; };
 		5ACFB3792CB922A400B3E7F8 /* VaultActionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = VaultActionView.swift; sourceTree = "<group>"; };
+		5ACFB37A2CB922A400B3E7F8 /* BraavosConnectView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BraavosConnectView.swift; sourceTree = "<group>"; };
+		5ACFB37B2CB922A400B3E7F8 /* BraavosConnectionManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BraavosConnectionManager.swift; sourceTree = "<group>"; };
+		5ACFB37E2CB922A400B3E7F8 /* WalletConnectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WalletConnectionView.swift; sourceTree = "<group>"; };
+		9F8D7C6B5A4E001100110001 /* PrivateKeyScannerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeyScannerView.swift; sourceTree = "<group>"; };
+		9F8D7C6B5A4E001100110003 /* PrivateKeyScannerViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrivateKeyScannerViewController.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -71,10 +91,22 @@
 			buildActionMask = 2147483647;
 			files = (
 				037777092E98DF01002568C5 /* Functions in Frameworks */,
+				224A744D2E9E7389006B533E /* WalletConnect in Frameworks */,
+				224A74452E9E7389006B533E /* ReownAppKit in Frameworks */,
 				037777072E98DF01002568C5 /* Auth in Frameworks */,
+				224A74572E9E7389006B533E /* WalletConnectPush in Frameworks */,
+				224A74552E9E7389006B533E /* WalletConnectPairing in Frameworks */,
 				0377770F2E98DF01002568C5 /* Supabase in Frameworks */,
 				0377770D2E98DF01002568C5 /* Storage in Frameworks */,
 				0377770B2E98DF01002568C5 /* Realtime in Frameworks */,
+				224A74592E9E7389006B533E /* WalletConnectVerify in Frameworks */,
+				5ACFB37D2CB922A400B3E7F9 /* AppKit in Frameworks */,
+				224A74472E9E7389006B533E /* ReownAppKitUI in Frameworks */,
+				224A74532E9E7389006B533E /* WalletConnectNotify in Frameworks */,
+				224A744B2E9E7389006B533E /* ReownWalletKit in Frameworks */,
+				224A744F2E9E7389006B533E /* WalletConnectIdentity in Frameworks */,
+				224A74512E9E7389006B533E /* WalletConnectNetworking in Frameworks */,
+				224A74492E9E7389006B533E /* ReownRouter in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -84,11 +116,14 @@
 		037776EB2E98D8D4002568C5 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				9F8D7C6B5A4E001100110001 /* PrivateKeyScannerView.swift */,
 				037776F42E98D903002568C5 /* QRScannerView.swift */,
 				037776F02E98D8EF002568C5 /* SignupView.swift */,
 				037776EE2E98D8E6002568C5 /* LoginView.swift */,
 				037776EC2E98D8DE002568C5 /* HomeView.swift */,
 				5ACFB3782CB922A400B3E7F8 /* StarknetConnectView.swift */,
+				5ACFB37A2CB922A400B3E7F8 /* BraavosConnectView.swift */,
+				5ACFB37E2CB922A400B3E7F8 /* WalletConnectionView.swift */,
 				5ACFB3792CB922A400B3E7F8 /* VaultActionView.swift */,
 				5ACFB377A2CB922A400B3E7F8 /* QRPaymentView.swift */,
 				5ACFB377B2CB922A400B3E7F8 /* ChippiPayServicesView.swift */,
@@ -105,6 +140,7 @@
 				5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */,
 				5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */,
 				5ACFB3778CB922A400B3E7F8 /* ReadyWalletManager.swift */,
+				5ACFB37B2CB922A400B3E7F8 /* BraavosConnectionManager.swift */,
 			);
 			path = Managers;
 			sourceTree = "<group>";
@@ -144,6 +180,7 @@
 				1234567890ABCDE0 /* AppDelegate.swift */,
 				1234567890ABCDE2 /* SceneDelegate.swift */,
 				1234567890ABCDE4 /* QRScannerViewController.swift */,
+				9F8D7C6B5A4E001100110003 /* PrivateKeyScannerViewController.swift */,
 				1234567890ABCDE6 /* Main.storyboard */,
 				1234567890ABCDE8 /* LaunchScreen.storyboard */,
 				1234567890ABCDEB /* Info.plist */,
@@ -205,6 +242,7 @@
 			mainGroup = 1234567890ABCDD4;
 			packageReferences = (
 				037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */,
+				5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */,
 			);
 			productRefGroup = 1234567890ABCDDE /* Products */;
 			projectDirPath = "";
@@ -247,11 +285,16 @@
 				5ACFB3772CB922A400B3E7F9 /* ChippiPayManager.swift in Sources */,
 				5ACFB3778CB922A400B3E7F9 /* ReadyWalletManager.swift in Sources */,
 				5ACFB3782CB922A400B3E7F9 /* StarknetConnectView.swift in Sources */,
+				5ACFB37A2CB922A400B3E7F9 /* BraavosConnectView.swift in Sources */,
+				5ACFB37E2CB922A400B3E7F9 /* WalletConnectionView.swift in Sources */,
 				5ACFB3792CB922A400B3E7F9 /* VaultActionView.swift in Sources */,
+				5ACFB37B2CB922A400B3E7F9 /* BraavosConnectionManager.swift in Sources */,
 				5ACFB377A2CB922A400B3E7F9 /* QRPaymentView.swift in Sources */,
 				5ACFB377B2CB922A400B3E7F9 /* ChippiPayServicesView.swift in Sources */,
 				5ACFB377C2CB922A400B3E7F9 /* ChippiWalletCreationView.swift in Sources */,
 				5ACFB377D2CB922A400B3E7F9 /* ServicePurchaseView.swift in Sources */,
+				9F8D7C6B5A4E001100110002 /* PrivateKeyScannerView.swift in Sources */,
+				9F8D7C6B5A4E001100110004 /* PrivateKeyScannerViewController.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -395,6 +438,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = QRPaymentScanner/QRPaymentScanner.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3U2SL4BUT9;
@@ -428,6 +472,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = QRPaymentScanner/QRPaymentScanner.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_TEAM = 3U2SL4BUT9;
@@ -488,8 +533,14 @@
 				minimumVersion = 2.5.1;
 			};
 		};
-
-
+		5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/reown-com/reown-swift";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
@@ -518,8 +569,66 @@
 			package = 037777052E98DF01002568C5 /* XCRemoteSwiftPackageReference "supabase-swift" */;
 			productName = Supabase;
 		};
-
-
+		224A74442E9E7389006B533E /* ReownAppKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = ReownAppKit;
+		};
+		224A74462E9E7389006B533E /* ReownAppKitUI */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = ReownAppKitUI;
+		};
+		224A74482E9E7389006B533E /* ReownRouter */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = ReownRouter;
+		};
+		224A744A2E9E7389006B533E /* ReownWalletKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = ReownWalletKit;
+		};
+		224A744C2E9E7389006B533E /* WalletConnect */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = WalletConnect;
+		};
+		224A744E2E9E7389006B533E /* WalletConnectIdentity */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = WalletConnectIdentity;
+		};
+		224A74502E9E7389006B533E /* WalletConnectNetworking */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = WalletConnectNetworking;
+		};
+		224A74522E9E7389006B533E /* WalletConnectNotify */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = WalletConnectNotify;
+		};
+		224A74542E9E7389006B533E /* WalletConnectPairing */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = WalletConnectPairing;
+		};
+		224A74562E9E7389006B533E /* WalletConnectPush */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = WalletConnectPush;
+		};
+		224A74582E9E7389006B533E /* WalletConnectVerify */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = WalletConnectVerify;
+		};
+		5ACFB37D2CB922A400B3E7F8 /* AppKit */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
+			productName = ReownAppKit;
+		};
 /* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1234567890ABCDD5 /* Project object */;

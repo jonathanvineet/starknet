@@ -340,7 +340,7 @@ struct ChippiWalletCreationView: View {
                 // Create mock auth token for demo
                 let authToken = "demo_auth_token_\(UUID().uuidString)"
                 
-                let wallet = try await chippiPayManager.createGaslessWallet(
+                _ = try await chippiPayManager.createGaslessWallet(
                     userPassword: userPassword,
                     authToken: authToken,
                     externalUserId: externalUserId

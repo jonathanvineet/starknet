@@ -5,6 +5,7 @@
 
 import UIKit
 import SwiftUI
+import ReownAppKit
 
 class SceneDelegate: UIResponder, UIWindowSceneDelegate {
 
@@ -55,15 +56,62 @@ class SceneDelegate: UIResponder, UIWindowSceneDelegate {
         // to restore the scene back to its current state.
     }
 
-    // Handle deeplink return from Ready Wallet (iOS 13+ scene-based apps)
+    // Handle deeplink return from wallets (iOS 13+ scene-based apps)
     func scene(_ scene: UIScene, openURLContexts URLContexts: Set<UIOpenURLContext>) {
         guard let url = URLContexts.first?.url else { return }
         
         print("🔗 SceneDelegate received URL: \(url.absoluteString)")
         
+        // First, let AppKit handle WalletConnect deep links
+        // This is important for Braavos and other WalletConnect-based wallet callbacks
+        AppKit.instance.handleDeeplink(url)
+        
         // Handle wallet callback responses
         if url.scheme == "starknet" || url.scheme == "qrpaymentscanner" {
-            ReadyWalletManager.shared.handleReadyCallback(url: url)
+            // Check if it's a Braavos callback
+            if url.host == "starknet-callback" {
+                handleBraavosCallback(url: url)
+            } else {
+                // Ready wallet callback
+                ReadyWalletManager.shared.handleReadyCallback(url: url)
+            }
+        }
+    }
+    
+    private func handleBraavosCallback(url: URL) {
+        print("🦁 Braavos callback received")
+        
+        // Parse URL components
+        guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false),
+              let queryItems = components.queryItems else {
+            print("❌ Failed to parse Braavos callback URL")
+            return
+        }
+        
+        // Extract address from callback
+        var address: String?
+        var publicKey: String?
+        
+        for item in queryItems {
+            switch item.name {
+            case "address":
+                address = item.value
+                print("📍 Braavos address: \(item.value ?? "nil")")
+            case "publicKey":
+                publicKey = item.value
+                print("🔑 Braavos publicKey: \(item.value ?? "nil")")
+            default:
+                print("ℹ️ Braavos param: \(item.name) = \(item.value ?? "nil")")
+            }
+        }
+        
+        // Connect to wallet with received credentials
+        if let address = address {
+            // Braavos doesn't return private key, use read-only connection
+            StarknetManager.shared.connectReadOnlyWallet(address: address, publicKey: publicKey)
+            print("✅ Braavos wallet connected in read-only mode")
+        } else {
+            print("❌ No address in Braavos callback")
         }
     }
 }
