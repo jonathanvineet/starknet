@@ -25,6 +25,7 @@
 		<string>ready</string>
 		<string>braavos</string>
 		<string>wc</string>
+		<string>keplrwallet</string>
 	</array>
 	<key>UIApplicationSceneManifest</key>
 	<dict>

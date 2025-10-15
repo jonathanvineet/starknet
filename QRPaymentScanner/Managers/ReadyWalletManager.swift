@@ -63,10 +63,15 @@ public class ReadyWalletManager: ObservableObject {
             return false
         }
         
+        // Set status to connecting
+        connectionStatus = .connecting
         isConnecting = true
         errorMessage = ""
         
         defer {
+            if connectionStatus == .connecting {
+                connectionStatus = .disconnected
+            }
             isConnecting = false
         }
         
@@ -86,6 +91,7 @@ public class ReadyWalletManager: ObservableObject {
         } catch {
             print("❌ Connection error: \(error)")
             errorMessage = "Failed to connect: \(error.localizedDescription)"
+            connectionStatus = .failed
             return false
         }
     }
@@ -147,11 +153,15 @@ public class ReadyWalletManager: ObservableObject {
         print("⏳ Waiting for connection callback...")
         
         // Wait for up to 30 seconds for the connection callback
-        for _ in 0..<30 {
+        for i in 0..<30 {
+            if i % 5 == 0 {
+                print("⏳ Still waiting... (\(i)s elapsed, status: \(connectionStatusString))")
+            }
+            
             if connectionStatus == .connected {
                 print("✅ Connection successful!")
                 return true
-            } else if connectionStatus == .disconnected {
+            } else if connectionStatus == .failed {
                 print("❌ Connection failed or rejected")
                 return false
             }
@@ -159,10 +169,10 @@ public class ReadyWalletManager: ObservableObject {
             try? await Task.sleep(nanoseconds: 1_000_000_000) // 1 second
         }
         
-        print("⏰ Connection timeout")
+        print("⏰ Connection timeout after 30 seconds")
         await MainActor.run {
-            connectionStatus = .disconnected
-            errorMessage = "Connection timeout. Please try again."
+            connectionStatus = .failed
+            errorMessage = "Connection timeout. Please make sure you approved the connection in Ready Wallet."
         }
         return false
     }
@@ -238,24 +248,6 @@ public class ReadyWalletManager: ObservableObject {
         }
     }
     
-    private func simulateConnection() async -> Bool {
-        print("🎭 Simulating connection for demo...")
-        
-        // Simulate connection delay
-        try? await Task.sleep(nanoseconds: 2_000_000_000) // 2 seconds
-        
-        await MainActor.run {
-            isConnected = true
-            connectedAddress = "0x1234567890abcdef1234567890abcdef12345678"
-            publicKey = "0xpublic_key_example"
-            walletName = "Ready Wallet"
-            errorMessage = ""
-        }
-        
-        print("✅ Simulated connection successful")
-        return true
-    }
-    
     // MARK: - Disconnect
     
     public func disconnect() {
@@ -266,6 +258,7 @@ public class ReadyWalletManager: ObservableObject {
         publicKey = ""
         walletName = ""
         errorMessage = ""
+        connectionStatus = .disconnected
         
         print("✅ Disconnected successfully")
     }
@@ -325,6 +318,10 @@ public class ReadyWalletManager: ObservableObject {
     
     public func handleReadyCallback(url: URL) {
         print("🔗 ReadyWalletManager handling callback URL: \(url.absoluteString)")
+        print("   Scheme: \(url.scheme ?? "none")")
+        print("   Host: \(url.host ?? "none")")
+        print("   Path: \(url.path)")
+        print("   Query: \(url.query ?? "none")")
         
         // Parse the URL for wallet response data
         guard let components = URLComponents(url: url, resolvingAgainstBaseURL: false) else {
@@ -332,46 +329,77 @@ public class ReadyWalletManager: ObservableObject {
             return
         }
         
-        // Handle different callback types
-        if let host = components.host {
-            switch host {
-            case "connect":
-                handleConnectCallback(components: components)
-            case "sign":
-                handleSignCallback(components: components)
-            case "send":
-                handleSendCallback(components: components)
-            default:
-                print("⚠️ Unknown callback type: \(host)")
+        // Debug: Print all query items
+        if let queryItems = components.queryItems {
+            print("📋 Query items received:")
+            for item in queryItems {
+                print("   - \(item.name): \(item.value ?? "nil")")
             }
+        }
+        
+        // Handle different callback types
+        // Check path for callback type (e.g., /ready/callback)
+        let pathComponents = url.pathComponents.filter { $0 != "/" }
+        
+        if pathComponents.contains("callback") || url.host == "callback" || url.host == "ready" {
+            handleConnectCallback(components: components)
+        } else if pathComponents.contains("sign") || url.host == "sign" {
+            handleSignCallback(components: components)
+        } else if pathComponents.contains("send") || url.host == "send" {
+            handleSendCallback(components: components)
+        } else {
+            print("⚠️ Unknown callback type, treating as connect callback")
+            handleConnectCallback(components: components)
         }
     }
     
     private func handleConnectCallback(components: URLComponents) {
+        print("🔌 Processing connect callback...")
+        
         guard let queryItems = components.queryItems else {
             print("❌ No query items in connect callback")
+            DispatchQueue.main.async {
+                self.connectionStatus = .failed
+                self.errorMessage = "Invalid callback format"
+                self.isConnecting = false
+            }
             return
         }
         
         var address = ""
         var publicKey = ""
         var name = ""
+        var success = false
         
         for item in queryItems {
             switch item.name {
-            case "address":
+            case "address", "account":
                 address = item.value ?? ""
-            case "publicKey":
+                print("   ✓ Address: \(address)")
+            case "publicKey", "public_key":
                 publicKey = item.value ?? ""
-            case "name":
+                print("   ✓ Public Key: \(publicKey.prefix(20))...")
+            case "name", "wallet_name":
                 name = item.value ?? ""
+                print("   ✓ Name: \(name)")
+            case "success":
+                success = (item.value == "true" || item.value == "1")
+                print("   ✓ Success flag: \(success)")
+            case "error":
+                if let error = item.value {
+                    print("   ✗ Error: \(error)")
+                    DispatchQueue.main.async {
+                        self.errorMessage = error
+                    }
+                }
             default:
                 break
             }
         }
         
-        if !address.isEmpty {
-            print("✅ Connection successful!")
+        // Check if we have a valid connection
+        if !address.isEmpty || success {
+            print("✅ Connection callback successful!")
             DispatchQueue.main.async {
                 self.connectedAddress = address
                 self.publicKey = publicKey
@@ -380,6 +408,14 @@ public class ReadyWalletManager: ObservableObject {
                 self.isConnecting = false
                 self.errorMessage = ""
                 
+                // 🔥 CRITICAL FIX: Set connectionStatus to .connected
+                self.connectionStatus = .connected
+                
+                print("✅ Connection state updated:")
+                print("   - Address: \(self.connectedAddress)")
+                print("   - Name: \(self.walletName)")
+                print("   - Status: \(self.connectionStatusString)")
+                
                 // Resume any waiting connection
                 self.connectionContinuation?.resume(returning: true)
                 self.connectionContinuation = nil
@@ -387,10 +423,13 @@ public class ReadyWalletManager: ObservableObject {
                 self.connectionTimer = nil
             }
         } else {
-            print("❌ Connection failed - no address provided")
+            print("❌ Connection callback failed - no address or success flag")
             DispatchQueue.main.async {
-                self.errorMessage = "Connection failed"
+                self.errorMessage = self.errorMessage.isEmpty ? "Connection rejected" : self.errorMessage
                 self.isConnecting = false
+                
+                // 🔥 CRITICAL FIX: Set connectionStatus to .failed
+                self.connectionStatus = .failed
                 
                 // Resume any waiting connection
                 self.connectionContinuation?.resume(returning: false)

@@ -5,6 +5,7 @@
 
 import UIKit
 import Foundation
+import WalletConnectSign
 
 @main
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -14,6 +15,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
         // Configure ChippiPay API keys
         configureChippiPay()
+        
+        // Configure WalletConnect
+        configureWalletConnect()
 
         return true
     }
@@ -97,6 +101,17 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // Use this method to release any resources that were specific to the discarded scenes, as they will not return.
     }
 
+    // MARK: - WalletConnect Configuration
+    
+    private func configureWalletConnect() {
+        Networking.configure(
+            projectId: WalletConnectConfiguration.projectId,
+            socketFactory: SocketFactory()
+        )
+        
+        Sign.configure(metadata: WalletConnectConfiguration.metadata)
+    }
+    
     // Forward deeplink callbacks (fallback path; primary handling happens in SceneDelegate on iOS 13+)
     func application(_ app: UIApplication, open url: URL, options: [UIApplication.OpenURLOptionsKey : Any] = [:]) -> Bool {
         print("🔗 AppDelegate handling URL: \(url.absoluteString)")
@@ -107,6 +122,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
            (url.scheme == "com" && url.host == "vj" && url.path.hasPrefix("/QRPaymentScanner")) {
             ReadyWalletManager.shared.handleReadyCallback(url: url)
             return true
+        }
+        
+        // Handle WalletConnect URLs
+        if url.scheme == "wc" || url.absoluteString.contains("wc?") {
+            return true // WalletConnect SDK handles this automatically
         }
         
         return false

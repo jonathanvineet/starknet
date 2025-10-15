@@ -11,10 +11,12 @@ import AVFoundation
 struct HomeView: View {
     @StateObject private var supabase = SupabaseManager.shared
     @StateObject private var starknet = StarknetManager.shared
+    @StateObject private var keplrManager = KeplrWalletManager()
     @State private var showQRScanner = false
     @State private var showQRPayment = false
     @State private var showProfile = false
     @State private var showStarknetConnect = false
+    @State private var showKeplrConnect = false
     @State private var showDepositView = false
     @State private var showWithdrawView = false
     @State private var showTransferView = false
@@ -53,20 +55,36 @@ struct HomeView: View {
                             
                             Spacer()
                             
-                            // Starknet Connect Button
-                            Button(action: {
-                                if starknet.isConnected {
-                                    starknet.disconnectWallet()
-                                } else {
-                                    showStarknetConnect = true
+                            // Wallet Connect Menu
+                            Menu {
+                                Button(action: {
+                                    if starknet.isConnected {
+                                        starknet.disconnectWallet()
+                                    } else {
+                                        showStarknetConnect = true
+                                    }
+                                }) {
+                                    HStack {
+                                        Image(systemName: starknet.isConnected ? "bolt.fill" : "bolt.circle")
+                                        Text("Starknet")
+                                    }
                                 }
-                            }) {
+                                
+                                Button(action: {
+                                    showKeplrConnect = true
+                                }) {
+                                    HStack {
+                                        Image(systemName: keplrManager.isConnected ? "bolt.fill" : "bolt.circle")
+                                        Text("Keplr")
+                                    }
+                                }
+                            } label: {
                                 HStack(spacing: 6) {
-                                    Image(systemName: starknet.isConnected ? "bolt.fill" : "bolt.circle")
-                                        .foregroundColor(starknet.isConnected ? .green : .orange)
-                                    Text(starknet.isConnected ? "Connected" : "Connect")
+                                    Image(systemName: (starknet.isConnected || keplrManager.isConnected) ? "bolt.fill" : "bolt.circle")
+                                        .foregroundColor((starknet.isConnected || keplrManager.isConnected) ? .green : .orange)
+                                    Text((starknet.isConnected || keplrManager.isConnected) ? "Connected" : "Connect")
                                         .font(.system(size: 12, weight: .medium))
-                                        .foregroundColor(starknet.isConnected ? .green : .orange)
+                                        .foregroundColor((starknet.isConnected || keplrManager.isConnected) ? .green : .orange)
                                 }
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 6)
@@ -352,6 +370,9 @@ struct HomeView: View {
         }
         .sheet(isPresented: $showChippiPayServices) {
             ChippiPayServicesView()
+        }
+        .sheet(isPresented: $showKeplrConnect) {
+            KeplrConnectView()
         }
         .alert("ChippiPay API Test", isPresented: $showChippiPayTest) {
             Button("Run Test") {
