@@ -12,6 +12,7 @@ import Combine
 struct WalletConnectionView: View {
     @StateObject private var connectionManager = WalletConnectionManager.shared
     @Environment(\.dismiss) private var dismiss
+    @State private var showManualImport = false
     
     var body: some View {
         NavigationView {
@@ -33,6 +34,9 @@ struct WalletConnectionView: View {
                         dismiss()
                     }
                 }
+            }
+            .sheet(isPresented: $showManualImport) {
+                ManualWalletImportView()
             }
         }
     }
@@ -59,19 +63,54 @@ struct WalletConnectionView: View {
             
             // Wallet Buttons
             VStack(spacing: 16) {
-                // Ready Wallet Button
+                // Ready Wallet Button (was Argent X)
                 Button(action: {
+                    print("🎯 [UI] Ready Wallet button tapped")
                     Task {
                         await connectionManager.connectReadyWallet()
                     }
                 }) {
                     HStack {
-                        Image(systemName: "checkmark.seal.fill")
+                        Image(systemName: "star.fill")
                             .font(.title2)
                         VStack(alignment: .leading, spacing: 4) {
                             Text("Ready Wallet")
                                 .font(.headline)
-                            Text("Recommended")
+                            Text("Most Popular")
+                                .font(.caption)
+                                .foregroundColor(.white.opacity(0.8))
+                        }
+                        Spacer()
+                        Image(systemName: "arrow.right")
+                    }
+                    .padding()
+                    .frame(maxWidth: .infinity)
+                    .background(
+                        LinearGradient(
+                            colors: [Color.purple, Color.pink],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        )
+                    )
+                    .foregroundColor(.white)
+                    .cornerRadius(16)
+                    .shadow(color: .purple.opacity(0.3), radius: 10)
+                }
+                
+                // Ready Wallet Email Signin
+                Button(action: {
+                    print("🎯 [UI] Ready Wallet Email Signin tapped")
+                    Task {
+                        await connectionManager.connectReadyWalletEmail()
+                    }
+                }) {
+                    HStack {
+                        Image(systemName: "envelope.fill")
+                            .font(.title2)
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Ready Wallet (Email)")
+                                .font(.headline)
+                            Text("Sign in with Email")
                                 .font(.caption)
                                 .foregroundColor(.white.opacity(0.8))
                         }
@@ -94,6 +133,7 @@ struct WalletConnectionView: View {
                 
                 // Braavos Button
                 Button(action: {
+                    print("🎯 [UI] Braavos button tapped")
                     Task {
                         await connectionManager.connectBraavos()
                     }
@@ -126,6 +166,40 @@ struct WalletConnectionView: View {
                 }
             }
             .padding(.horizontal)
+            
+            Divider()
+                .padding(.vertical, 8)
+            
+            // Alternative: Manual Import Option
+            VStack(spacing: 12) {
+                Text("Can't connect?")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+                
+                Button(action: {
+                    print("🎯 [UI] Manual import button tapped")
+                    showManualImport = true
+                }) {
+                    HStack {
+                        Image(systemName: "key.fill")
+                        Text("Import with Private Key or QR Code")
+                            .font(.subheadline)
+                        Spacer()
+                        Image(systemName: "arrow.right")
+                            .font(.caption)
+                    }
+                    .padding()
+                    .background(Color(.systemGray6))
+                    .foregroundColor(.primary)
+                    .cornerRadius(12)
+                }
+                
+                Text("Works with any Starknet wallet")
+                    .font(.caption2)
+                    .foregroundColor(.secondary)
+            }
+            .padding(.horizontal)
+            .padding(.top, 8)
             
             if connectionManager.isLoading {
                 ProgressView()
@@ -270,21 +344,37 @@ class WalletConnectionManager: ObservableObject {
     
     @MainActor
     func connectReadyWallet() async {
+        print("🔗 [Manager] connectReadyWallet() called")
         await connectWallet(walletId: readyWalletId, name: "Ready Wallet")
     }
     
     @MainActor
+    func connectReadyWalletEmail() async {
+        print("🔗 [Manager] connectReadyWalletEmail() called")
+        // Ready Wallet email signin uses same wallet ID but different flow
+        await connectWallet(walletId: readyWalletId, name: "Ready Wallet (Email)", useEmail: true)
+    }
+    
+    @MainActor
     func connectBraavos() async {
+        print("🔗 [Manager] connectBraavos() called")
         await connectWallet(walletId: braavosId, name: "Braavos")
     }
     
     @MainActor
-    private func connectWallet(walletId: String, name: String) async {
+    private func connectWallet(walletId: String, name: String, useEmail: Bool = false) async {
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        print("🚀 [Manager] connectWallet START")
+        print("   Wallet: \(name)")
+        print("   ID: \(walletId)")
+        print("   Email: \(useEmail)")
+        print("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━")
+        
         isLoading = true
         errorMessage = nil
         
         do {
-            print("🔗 Connecting to \(name)...")
+            print("🔗 [Manager] Connecting to \(name)...")
             
             // Determine the universal link for the wallet
             let universalLink: String?
@@ -298,7 +388,7 @@ class WalletConnectionManager: ObservableObject {
                 universalLink = nil
             }
             
-            print("🌐 Using universal link: \(universalLink ?? "none")")
+            print("🌐 [Manager] Using universal link: \(universalLink ?? "none")")
             
             // Use AppKit's connect with the universal link
             let uri = try await AppKit.instance.connect(walletUniversalLink: universalLink)
@@ -313,7 +403,9 @@ class WalletConnectionManager: ObservableObject {
                 
                 if walletId == readyWalletId {
                     // Try Ready Wallet's custom scheme
+                    print("🔍 [Manager] Building Ready Wallet deeplink...")
                     let schemes = [
+                        "argentx://wc?uri=\(pairingURI.deeplinkUri)",
                         "readywallet://wc?uri=\(pairingURI.deeplinkUri)",
                         "ready-wallet://wc?uri=\(pairingURI.deeplinkUri)",
                         "https://ready.io/wc?uri=\(pairingURI.deeplinkUri)"
@@ -322,7 +414,7 @@ class WalletConnectionManager: ObservableObject {
                     for scheme in schemes {
                         if let url = URL(string: scheme) {
                             let canOpen = UIApplication.shared.canOpenURL(url)
-                            print(canOpen ? "✅ Can open: \(scheme)" : "❌ Cannot open: \(scheme)")
+                            print(canOpen ? "✅ [Manager] Can open: \(scheme.prefix(50))..." : "❌ [Manager] Cannot open: \(scheme.prefix(50))...")
                             if canOpen {
                                 walletURL = url
                                 break
@@ -330,9 +422,9 @@ class WalletConnectionManager: ObservableObject {
                         }
                     }
                     
-                    // Fallback to direct scheme
+                    // Fallback to argentx scheme (Ready is now called argentx)
                     if walletURL == nil {
-                        print("⚠️ Using fallback URL for Ready Wallet")
+                        print("⚠️ [Manager] No scheme worked, using argentx:// fallback")
                         walletURL = URL(string: schemes[0])
                     }
                     
@@ -364,11 +456,21 @@ class WalletConnectionManager: ObservableObject {
                 
                 // Open the wallet
                 if let url = walletURL {
-                    print("📱 Opening wallet with: \(url.absoluteString)")
+                    print("📱 [Manager] Opening wallet with: \(url.absoluteString.prefix(100))...")
                     let opened = await UIApplication.shared.open(url)
-                    print(opened ? "✅ Successfully opened wallet" : "❌ Failed to open wallet")
-                    sessionTopic = pairingURI.topic
+                    print(opened ? "✅ [Manager] Successfully opened wallet" : "❌ [Manager] Failed to open wallet")
+                    
+                    if opened {
+                        sessionTopic = pairingURI.topic
+                        print("💾 [Manager] Session topic saved: \(sessionTopic ?? "nil")")
+                        print("⏳ [Manager] Waiting for wallet approval...")
+                    } else {
+                        throw NSError(domain: "WalletConnection", code: -2, userInfo: [
+                            NSLocalizedDescriptionKey: "Failed to open \(name)"
+                        ])
+                    }
                 } else {
+                    print("❌ [Manager] ERROR: Could not create wallet URL")
                     throw NSError(domain: "WalletConnection", code: -1, userInfo: [
                         NSLocalizedDescriptionKey: "Could not create wallet URL"
                     ])

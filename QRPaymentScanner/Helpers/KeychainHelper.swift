@@ -19,6 +19,9 @@ public class KeychainHelper {
         static let chippiPayAPIKey = "com.qrpayment.chipipay.apikey"
         static let chippiPaySecretKey = "com.qrpayment.chipipay.secretkey"
         static let chippiPayWalletKey = "com.qrpayment.chipipay.walletkey"
+        static let starknetPrivateKey = "com.qrpayment.starknet.privatekey"
+        static let starknetAddress = "com.qrpayment.starknet.address"
+        static let starknetPublicKey = "com.qrpayment.starknet.publickey"
     }
 
     // MARK: - Public API
@@ -69,6 +72,45 @@ public class KeychainHelper {
         _ = delete(key: KeychainKey.chippiPayAPIKey)
         _ = delete(key: KeychainKey.chippiPaySecretKey)
         _ = delete(key: KeychainKey.chippiPayWalletKey)
+    }
+    
+    // MARK: - Starknet Wallet Keys
+    
+    /// Save Starknet private key securely
+    public func saveStarknetPrivateKey(_ key: String) -> Bool {
+        return save(key: KeychainKey.starknetPrivateKey, value: key)
+    }
+    
+    /// Retrieve Starknet private key
+    public func getStarknetPrivateKey() -> String? {
+        return retrieve(key: KeychainKey.starknetPrivateKey)
+    }
+    
+    /// Save Starknet address
+    public func saveStarknetAddress(_ address: String) -> Bool {
+        return save(key: KeychainKey.starknetAddress, value: address)
+    }
+    
+    /// Retrieve Starknet address
+    public func getStarknetAddress() -> String? {
+        return retrieve(key: KeychainKey.starknetAddress)
+    }
+    
+    /// Save Starknet public key
+    public func saveStarknetPublicKey(_ key: String) -> Bool {
+        return save(key: KeychainKey.starknetPublicKey, value: key)
+    }
+    
+    /// Retrieve Starknet public key
+    public func getStarknetPublicKey() -> String? {
+        return retrieve(key: KeychainKey.starknetPublicKey)
+    }
+    
+    /// Clear all Starknet keys from keychain
+    public func clearAllStarknetKeys() {
+        _ = delete(key: KeychainKey.starknetPrivateKey)
+        _ = delete(key: KeychainKey.starknetAddress)
+        _ = delete(key: KeychainKey.starknetPublicKey)
     }
 
     // MARK: - Generic Keychain Operations
