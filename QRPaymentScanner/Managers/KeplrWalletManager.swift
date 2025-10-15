@@ -22,14 +22,8 @@ class KeplrWalletManager: ObservableObject {
     }
     
     private func setupSignClient() {
-        do {
-            signClient = try SignClient(
-                metadata: WalletConnectConfiguration.metadata,
-                projectId: WalletConnectConfiguration.projectId
-            )
-        } catch {
-            print("Error initializing SignClient: \(error)")
-        }
+        // Use Sign.instance instead of creating a new SignClient
+        signClient = Sign.instance
     }
     
     // MARK: - Session Management

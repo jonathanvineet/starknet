@@ -1,19 +1,13 @@
 import Foundation
+import WalletConnectSign
 
-struct WalletConnectConfiguration {
+enum WalletConnectConfiguration {
     static let projectId = "b53b0c4260d98f4e715ef413ad1fafe5"
     
     static let metadata = AppMetadata(
         name: "QR Payment Scanner",
         description: "Starknet Payment Scanner",
-        url: "https://qrpaymentscanner.com", // Replace with your app's URL
-        icons: ["https://qrpaymentscanner.com/icon.png"] // Replace with your app's icon URL
+        url: "https://qrpaymentscanner.com",
+        icons: ["https://qrpaymentscanner.com/icon.png"]
     )
-}
-
-struct AppMetadata {
-    let name: String
-    let description: String
-    let url: String
-    let icons: [String]
 }
