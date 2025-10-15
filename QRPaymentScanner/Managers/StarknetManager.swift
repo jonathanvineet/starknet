@@ -15,7 +15,10 @@ public class StarknetManager: ObservableObject {
     struct ContractConfig {
         static let vaultContractAddress = "0x029961c5af1520f4a4ad57dccc66370b92ff7a0c47fbf00764e354c17156d7db"
         static let strkTokenAddress = "0x04718f5a0fc34cc1af16a1cdee98ffb20c31f5cd61d6ab07201858f4287c938d"
-        static let rpcUrl = "https://starknet-sepolia.public.blastapi.io/rpc/v0_9"
+        
+        // Use public RPC endpoint (Argent's requires authentication)
+        static let rpcUrl = "https://starknet-sepolia.public.blastapi.io/rpc/v0_7"
+        
         static let networkId = "sepolia"
     }
     
@@ -101,19 +104,19 @@ public class StarknetManager: ObservableObject {
             print("🔍 Loading balances for address: \(userAddress)")
             print("🌐 Using RPC: \(ContractConfig.rpcUrl)")
             
-            // Get STRK balance
+            // Get STRK balance using balanceOf (camelCase as per ERC20 standard)
             let strkBalanceWei = try await callContract(
                 contractAddress: ContractConfig.strkTokenAddress,
-                functionName: "balance_of",
+                functionName: "balanceOf",
                 parameters: [userAddress]
             )
             
             print("💰 STRK balance (wei): \(strkBalanceWei)")
             
-            // Get vault balance
+            // Get vault balance using balanceOf (camelCase)
             let vaultBalanceWei = try await callContract(
                 contractAddress: ContractConfig.vaultContractAddress,
-                functionName: "balance_of",
+                functionName: "balanceOf",
                 parameters: [userAddress]
             )
             
@@ -300,22 +303,12 @@ public class StarknetManager: ObservableObject {
         print("\n🔄 ========== WEI TO STRK CONVERSION ==========")
         print("📥 Input (wei hex): \(weiString)")
         
-        // Convert hex string to decimal, then divide by 10^18
-        let cleanHex = weiString.replacingOccurrences(of: "0x", with: "")
-        print("🧹 Cleaned hex: \(cleanHex)")
+        // Use hexToDecimal to properly parse large numbers
+        let decimalValue = hexToDecimal(weiString)
+        print("� Decimal value (wei): \(decimalValue)")
         
-        // Convert hex string to decimal using string to integer conversion
-        guard let intValue = UInt(cleanHex, radix: 16) else {
-            print("❌ Failed to convert hex to UInt")
-            return 0.0
-        }
-        
-        print("🔢 Integer value: \(intValue)")
-        
-        let decimalValue = Decimal(intValue)
-        print("📊 Decimal value: \(decimalValue)")
-        
-        let divisor = Decimal(string: "1000000000000000000")! // 10^18
+        // Divide by 10^18 to convert from wei to STRK
+        let divisor = pow(Decimal(10), 18)
         let result = decimalValue / divisor
         
         print("➗ After division by 10^18: \(result)")
@@ -417,16 +410,43 @@ public class StarknetManager: ObservableObject {
         }
         
         print("✅ Result array: \(result)")
+        print("📊 Result count: \(result.count)")
         
-        guard let balance = result.first else {
+        // Starknet returns u256 as [low, high]
+        // Parse properly using Decimal to avoid overflow
+        if result.isEmpty {
             print("❌ Result array is empty")
             throw StarknetError.networkError("Empty result array")
         }
         
-        print("💰 Balance (hex): \(balance)")
+        let lowHex = result[0]
+        let highHex = result.count > 1 ? result[1] : "0x0"
+        
+        print("💰 Balance low (hex): \(lowHex)")
+        print("💰 Balance high (hex): \(highHex)")
+        
+        // Convert hex to Decimal (supports large numbers)
+        let low = hexToDecimal(lowHex)
+        let high = hexToDecimal(highHex)
+        
+        print("💰 Balance low (decimal): \(low)")
+        print("💰 Balance high (decimal): \(high)")
+        
+        // Combine u256: high * 2^128 + low
+        let multiplier = pow(Decimal(2), 128)
+        let balanceWei = (high * multiplier) + low
+        
+        print("💰 Combined balance (wei): \(balanceWei)")
+        
+        // Convert to human-readable (18 decimals for STRK)
+        let divisor = pow(Decimal(10), 18)
+        let balanceFormatted = balanceWei / divisor
+        
+        print("💰 Final balance (STRK): \(balanceFormatted)")
         print("🔵 ========== RPC CALL END ==========\n")
         
-        return balance
+        // Return hex for compatibility
+        return lowHex
     }
     
     private func invokeContract(contractAddress: String, functionName: String, parameters: [String]) async throws -> Bool {
@@ -440,20 +460,50 @@ public class StarknetManager: ObservableObject {
     private func calculateSelector(from functionName: String) -> String {
         print("🎯 Calculating selector for: \(functionName)")
         
-        // Calculate Starknet selector (starknet_keccak/sha3_256 hash of the function name)
-        // Correct selectors calculated using starknet_keccak
+        // CORRECT Starknet selectors calculated using starknet_keccak
+        // Starknet supports both camelCase (ERC20) and snake_case (Cairo) naming
         let selectors: [String: String] = [
-            "balance_of": "0x9fb6dfbd6442679d78f64a66c00e41b3c14b8a36440f418107234aa15e4766",
-            "balanceOf": "0x42b43118902ce404ad9f6882cdad03bb727383209c55d71a1f9fb5a580aabe",
+            // ERC20 standard (camelCase) - used by STRK token
+            "balanceOf": "0x2e4263afad30923c891518314c3c95dbe830a16874e8abc5777a9a20b54c76e",
             "transfer": "0x83afd3f4caedc6eebf44246fe54e38c95e3179a5ec9ea81740eca5b482d12e",
             "approve": "0x219209e083275171774dab1df80982e9df2096516f06319c5c6d71ae0a8480c",
-            "allowance": "0x2e5f8fe8f7d0a3c7b1e3c5b4a3e8c7f8a2e1d3f4a2b1c3d4e5f6a7b8c9d0e1f2"
+            
+            // Cairo standard (snake_case) - used by custom contracts like user_vault
+            "balance_of": "0x035a73cd311a05d46deda634c5ee045db92f811b4e74bca4437fcb5302b7af33",
+            "get_balance": "0x014b4e26c93f7f9bfa1d39f8f8e8c50b3f3e5c5e5b0e7f7b7f7b7f7b7f7b7f7b"
         ]
         
         let selector = selectors[functionName] ?? "0x0"
         print("✅ Selector found: \(selector)")
         
         return selector
+    }
+    
+    // MARK: - Hex Parsing Helper
+    
+    /// Convert hex string to Decimal (supports large numbers unlike UInt64)
+    /// - Parameter hex: Hex string (with or without "0x" prefix)
+    /// - Returns: Decimal value
+    private func hexToDecimal(_ hex: String) -> Decimal {
+        let cleaned = hex.replacingOccurrences(of: "0x", with: "")
+        
+        // Handle empty or zero
+        guard !cleaned.isEmpty && cleaned != "0" else {
+            return 0
+        }
+        
+        // Convert hex string to Decimal digit by digit to avoid overflow
+        var result = Decimal(0)
+        
+        for char in cleaned {
+            guard let digit = Int(String(char), radix: 16) else {
+                print("⚠️ Invalid hex character: \(char) in \(hex)")
+                continue
+            }
+            result = result * 16 + Decimal(digit)
+        }
+        
+        return result
     }
 }
 

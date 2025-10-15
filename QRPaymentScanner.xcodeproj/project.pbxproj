@@ -36,6 +36,7 @@
 		224A74552E9E7389006B533E /* WalletConnectPairing in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74542E9E7389006B533E /* WalletConnectPairing */; };
 		224A74572E9E7389006B533E /* WalletConnectPush in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74562E9E7389006B533E /* WalletConnectPush */; };
 		224A74592E9E7389006B533E /* WalletConnectVerify in Frameworks */ = {isa = PBXBuildFile; productRef = 224A74582E9E7389006B533E /* WalletConnectVerify */; };
+		224A745B2E9ED6D0006B533E /* ManualWalletImportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 224A745A2E9ED6D0006B533E /* ManualWalletImportView.swift */; };
 		5ACFB3762CB922A400B3E7F9 /* StarknetManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */; };
 		5ACFB3772CB922A400B3E7F9 /* ChippiPayManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */; };
 		5ACFB3778CB922A400B3E7F9 /* ReadyWalletManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3778CB922A400B3E7F8 /* ReadyWalletManager.swift */; };
@@ -47,8 +48,8 @@
 		5ACFB3792CB922A400B3E7F9 /* VaultActionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB3792CB922A400B3E7F8 /* VaultActionView.swift */; };
 		5ACFB37A2CB922A400B3E7F9 /* BraavosConnectView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB37A2CB922A400B3E7F8 /* BraavosConnectView.swift */; };
 		5ACFB37B2CB922A400B3E7F9 /* BraavosConnectionManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB37B2CB922A400B3E7F8 /* BraavosConnectionManager.swift */; };
+		5ACFB37D2CB922A400B3E7F9 /* ReownAppKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5ACFB37D2CB922A400B3E7F8 /* ReownAppKit */; };
 		5ACFB37E2CB922A400B3E7F9 /* WalletConnectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5ACFB37E2CB922A400B3E7F8 /* WalletConnectionView.swift */; };
-		5ACFB37D2CB922A400B3E7F9 /* AppKit in Frameworks */ = {isa = PBXBuildFile; productRef = 5ACFB37D2CB922A400B3E7F8 /* AppKit */; };
 		9F8D7C6B5A4E001100110002 /* PrivateKeyScannerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8D7C6B5A4E001100110001 /* PrivateKeyScannerView.swift */; };
 		9F8D7C6B5A4E001100110004 /* PrivateKeyScannerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9F8D7C6B5A4E001100110003 /* PrivateKeyScannerViewController.swift */; };
 /* End PBXBuildFile section */
@@ -69,6 +70,7 @@
 		1234567890ABCDE9 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		1234567890ABCDEA /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/LaunchScreen.storyboard; sourceTree = "<group>"; };
 		1234567890ABCDEB /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		224A745A2E9ED6D0006B533E /* ManualWalletImportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ManualWalletImportView.swift; sourceTree = "<group>"; };
 		5ACFB3762CB922A400B3E7F8 /* StarknetManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StarknetManager.swift; sourceTree = "<group>"; };
 		5ACFB3772CB922A400B3E7F8 /* ChippiPayManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChippiPayManager.swift; sourceTree = "<group>"; };
 		5ACFB3778CB922A400B3E7F8 /* ReadyWalletManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReadyWalletManager.swift; sourceTree = "<group>"; };
@@ -100,7 +102,7 @@
 				0377770D2E98DF01002568C5 /* Storage in Frameworks */,
 				0377770B2E98DF01002568C5 /* Realtime in Frameworks */,
 				224A74592E9E7389006B533E /* WalletConnectVerify in Frameworks */,
-				5ACFB37D2CB922A400B3E7F9 /* AppKit in Frameworks */,
+				5ACFB37D2CB922A400B3E7F9 /* ReownAppKit in Frameworks */,
 				224A74472E9E7389006B533E /* ReownAppKitUI in Frameworks */,
 				224A74532E9E7389006B533E /* WalletConnectNotify in Frameworks */,
 				224A744B2E9E7389006B533E /* ReownWalletKit in Frameworks */,
@@ -116,6 +118,7 @@
 		037776EB2E98D8D4002568C5 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				224A745A2E9ED6D0006B533E /* ManualWalletImportView.swift */,
 				9F8D7C6B5A4E001100110001 /* PrivateKeyScannerView.swift */,
 				037776F42E98D903002568C5 /* QRScannerView.swift */,
 				037776F02E98D8EF002568C5 /* SignupView.swift */,
@@ -278,6 +281,7 @@
 				037776F52E98D904002568C5 /* QRScannerView.swift in Sources */,
 				037776F12E98D8EF002568C5 /* SignupView.swift in Sources */,
 				037776ED2E98D8DF002568C5 /* HomeView.swift in Sources */,
+				224A745B2E9ED6D0006B533E /* ManualWalletImportView.swift in Sources */,
 				1234567890ABCDE1 /* SceneDelegate.swift in Sources */,
 				037776F82E98D91B002568C5 /* SupabaseManager.swift in Sources */,
 				037776E82E98D8B9002568C5 /* QRPaymentApp.swift in Sources */,
@@ -624,7 +628,7 @@
 			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
 			productName = WalletConnectVerify;
 		};
-		5ACFB37D2CB922A400B3E7F8 /* AppKit */ = {
+		5ACFB37D2CB922A400B3E7F8 /* ReownAppKit */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 5ACFB37C2CB922A400B3E7F9 /* XCRemoteSwiftPackageReference "reown-swift" */;
 			productName = ReownAppKit;

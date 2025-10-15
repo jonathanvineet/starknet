@@ -84,23 +84,33 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         
         // Configure custom wallets for Starknet
         let customWallets = [
-            // Braavos Wallet
+            // Argent X - Has best WalletConnect support
+            Wallet(
+                id: "argentx",
+                name: "Argent X",
+                homepage: "https://www.argent.xyz/argent-x/",
+                imageUrl: "https://www.argent.xyz/logo.png",
+                order: 1,
+                mobileLink: "argentx://",
+                linkMode: nil
+            ),
+            // Braavos Wallet - Limited WC support
             Wallet(
                 id: "braavos",
                 name: "Braavos",
                 homepage: "https://braavos.app/",
                 imageUrl: "https://braavos.app/icon.png",
-                order: 1,
+                order: 2,
                 mobileLink: "braavos://",
                 linkMode: nil
             ),
-            // Ready Wallet
+            // Ready Wallet - iOS app doesn't support external WC yet
             Wallet(
                 id: "bc949c5d968ae81310268bf9193f9c9fb7bb4e1283e1284af8f2bd4992535fd6",
                 name: "Ready Wallet",
                 homepage: "https://readywallet.app/",
                 imageUrl: "https://readywallet.app/icon.png",
-                order: 2,
+                order: 3,
                 mobileLink: "readywallet://",
                 linkMode: nil
             )
