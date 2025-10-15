@@ -49,7 +49,6 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         // IMPORTANT: Configure Networking BEFORE AppKit
         // This is required for WalletConnect protocol communication
         Networking.configure(
-            groupIdentifier: "group.com.qrpaymentscanner.walletconnect",
             projectId: projectId,
             socketFactory: SocketFactory()
         )
@@ -222,12 +221,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     // MARK: - WalletConnect Configuration
     
     private func configureWalletConnect() {
-        Networking.configure(
-            projectId: WalletConnectConfiguration.projectId,
-            socketFactory: SocketFactory()
-        )
-        
-        Sign.configure(metadata: WalletConnectConfiguration.metadata)
+        // WalletConnect is already configured by ReownAppKit
+        // No need for additional configuration here
     }
     
     // Forward deeplink callbacks (fallback path; primary handling happens in SceneDelegate on iOS 13+)
